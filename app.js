@@ -75,183 +75,174 @@ onMessage(messaging, (payload) => {
 
 async function enablePushNotifications() {
 
-
   try {
 
     console.log("🔔 Requesting notification permission...");
 
-    const permission = await Notification.requestPermission();
+    // --------------------------------------------------
+    // REQUEST NOTIFICATION PERMISSION
+    // --------------------------------------------------
+
+    const permission =
+      await Notification.requestPermission();
 
     if (permission !== "granted") {
 
-      console.log("❌ Notification permission was not granted.");
+      console.log(
+        "❌ Notification permission was not granted."
+      );
+
+      alert(
+        "❌ Notification permission was not granted."
+      );
 
       return;
+    }
+
+    console.log(
+      "✅ Notification permission granted!"
+    );
+
+
+    // --------------------------------------------------
+    // REGISTER FIREBASE MESSAGING SERVICE WORKER
+    // --------------------------------------------------
+const registration = await navigator.serviceWorker.register(
+  "./firebase-messaging-sw.js"
+);
+
+
+    console.log(
+      "✅ Firebase messaging service worker registered."
+    );
+
+    console.log(
+      "Service Worker scope:",
+      registration.scope
+    );
+
+
+    // --------------------------------------------------
+    // GET FCM TOKEN
+    // --------------------------------------------------
+
+    const token =
+      await getToken(messaging, {
+
+        vapidKey:
+          "BKV2gqreCTzUCv5Hk2sfHnT6OXb54fFiyi3QGQOBw9UOUEoEZe-uFGIzIaIUc36uvxY5ED2CjWQn2RHk2Keyk8Y",
+
+        serviceWorkerRegistration:
+          registration
+
+      });
+
+
+    // --------------------------------------------------
+    // CHECK TOKEN
+    // --------------------------------------------------
+
+    if (token) {
+
+      console.log(
+        "✅ FCM registration token:"
+      );
+
+      console.log(token);
+
+
+      // ------------------------------------------------
+      // CHECK LOGIN
+      // ------------------------------------------------
+
+      if (!auth.currentUser) {
+
+        console.log(
+          "⚠️ User is not logged in."
+        );
+
+        alert(
+          "⚠️ Please login first, then enable notifications."
+        );
+
+        return;
+      }
+
+
+      // ------------------------------------------------
+      // SAVE FCM TOKEN TO FIRESTORE
+      // ------------------------------------------------
+
+      await setDoc(
+
+        doc(
+          db,
+          "fcmTokens",
+          auth.currentUser.uid
+        ),
+
+        {
+
+          token: token,
+
+          userId:
+            auth.currentUser.uid,
+
+          updatedAt:
+            serverTimestamp()
+
+        },
+
+        {
+          merge: true
+        }
+
+      );
+
+
+      console.log(
+        "✅ FCM token saved to Firestore."
+      );
+
+
+      // ------------------------------------------------
+      // SUCCESS MESSAGE
+      // ------------------------------------------------
+
+      alert(
+        "✅ AquaSense notifications connected!\n\n" +
+        "FCM token has been saved to Firebase."
+      );
+
+
+    } else {
+
+      console.log(
+        "⚠️ No FCM token received."
+      );
+
+      alert(
+        "⚠️ Firebase did not provide an FCM token."
+      );
 
     }
 
-    console.log("✅ Notification permission granted!");
-
-   const registration = await navigator.serviceWorker.register(
-  "/AquaSense-Predictive-Aquarium-Monitoring/firebase-messaging-sw.js"
-);
-
-console.log("✅ Firebase messaging service worker registered.");
-console.log("Service Worker scope:", registration.scope);
-console.log("Service Worker state:", registration.active?.state);
-
-alert(
-  "Service Worker registered successfully!\n\n" +
-  "Scope:\n" + registration.scope
-);
-
-    const token = await getToken(messaging, {
-      vapidKey: "BKV2gqreCTzUCv5Hk2sfHnT6OXb54fFiyi3QGQOBw9UOUEoEZe-uFGIzIaIUc36uvxY5ED2CjWQn2RHk2Keyk8Y",
-      serviceWorkerRegistration: registration
-    });
-if (token) {
-
-  console.log("✅ FCM registration token:");
-  console.log(token);
-
-  // Save FCM token to Firestore
-  if (auth.currentUser) {
-
-    await setDoc(
-      doc(db, "fcmTokens", auth.currentUser.uid),
-      {
-        token: token,
-        userId: auth.currentUser.uid,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    console.log("✅ FCM token saved to Firestore.");
-
-    alert(
-      "✅ AquaSense notifications connected!\n\n" +
-      "FCM token has been saved to Firebase."
-    );
-
-  } else {
-
-    console.log("⚠️ User is not logged in.");
-
-    alert(
-      "⚠️ Please login first, then enable notifications."
-    );
-
-  }
-
-} else {
-
-  console.log("⚠️ No FCM token received.");
-
+} catch (error) {
+  console.error("❌ Push notification setup failed:", error);
+  console.error("Error name:", error?.name);
+  console.error("Error message:", error?.message);
+  console.error("Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
   alert(
-    "⚠️ Firebase did not provide an FCM token."
+    "Push notification failed.\n\n" +
+    "Error: " +
+    (error?.message || error)
   );
+}
 
 }
 
-  const tokenBox = document.createElement("div");
-
-  tokenBox.innerHTML = `
-    <div style="
-      position: fixed;
-      top: 10%;
-      left: 5%;
-      width: 90%;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      z-index: 999999;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      font-family: Arial;
-    ">
-      <h3>🔔 FCM Registration Token</h3>
-
-      <textarea
-        id="fcmTokenText"
-        readonly
-        style="
-          width: 100%;
-          height: 150px;
-          font-size: 12px;
-          box-sizing: border-box;
-        "
-      >${token}</textarea>
-
-      <button
-        id="copyFcmTokenBtn"
-        style="
-          margin-top: 10px;
-          padding: 12px 20px;
-          border: none;
-          border-radius: 8px;
-          background: #2196f3;
-          color: white;
-          font-size: 16px;
-        "
-      >
-        📋 Copy Token
-      </button>
-
-      <button
-        id="closeFcmTokenBtn"
-        style="
-          margin-top: 10px;
-          margin-left: 8px;
-          padding: 12px 20px;
-          border: none;
-          border-radius: 8px;
-          background: #777;
-          color: white;
-          font-size: 16px;
-        "
-      >
-        Close
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(tokenBox);
-
-  document
-    .getElementById("copyFcmTokenBtn")
-    .addEventListener("click", copyToken);
-
-  document
-    .getElementById("closeFcmTokenBtn")
-    .addEventListener("click", () => {
-      tokenBox.remove();
-    });
-
-} else {
-
-  console.log("⚠️ No FCM token received.");
-
-  alert("⚠️ Firebase did not provide an FCM token.");
-
-}else {
-
-  console.log("⚠️ No FCM token received.");
-
-  alert(
-    "⚠️ Firebase did not provide an FCM token."
-  );
-
-}
-
-  } catch (error) {
-
-    console.error("❌ Push notification setup failed:", error);
-
-  }
-
-}
-
-window.enablePushNotifications = enablePushNotifications;
+window.enablePushNotifications =
+  enablePushNotifications;
 
 function convertUsernameToEmail(username) {
   return username.trim().toLowerCase() + "@aquasense.local";
