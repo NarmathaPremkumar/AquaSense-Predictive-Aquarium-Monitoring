@@ -109,19 +109,101 @@ alert(
       vapidKey: "BKV2gqreCTzUCv5Hk2sfHnT6OXb54fFiyi3QGQOBw9UOUEoEZe-uFGIzIaIUc36uvxY5ED2CjWQn2RHk2Keyk8Y",
       serviceWorkerRegistration: registration
     });
-
 if (token) {
 
   console.log("✅ FCM registration token:");
   console.log(token);
 
-  alert(
-    "FCM TOKEN:\n\n" +
-    token +
-    "\n\nCopy this token and use it in Firebase Console → Messaging → Send test message."
-  );
+  const copyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(token);
+      alert("✅ FCM token copied successfully!");
+    } catch (error) {
+      alert("❌ Could not copy token. Please copy it manually.");
+      console.error(error);
+    }
+  };
+
+  const tokenBox = document.createElement("div");
+
+  tokenBox.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 10%;
+      left: 5%;
+      width: 90%;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      z-index: 999999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      font-family: Arial;
+    ">
+      <h3>🔔 FCM Registration Token</h3>
+
+      <textarea
+        id="fcmTokenText"
+        readonly
+        style="
+          width: 100%;
+          height: 150px;
+          font-size: 12px;
+          box-sizing: border-box;
+        "
+      >${token}</textarea>
+
+      <button
+        id="copyFcmTokenBtn"
+        style="
+          margin-top: 10px;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 8px;
+          background: #2196f3;
+          color: white;
+          font-size: 16px;
+        "
+      >
+        📋 Copy Token
+      </button>
+
+      <button
+        id="closeFcmTokenBtn"
+        style="
+          margin-top: 10px;
+          margin-left: 8px;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 8px;
+          background: #777;
+          color: white;
+          font-size: 16px;
+        "
+      >
+        Close
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(tokenBox);
+
+  document
+    .getElementById("copyFcmTokenBtn")
+    .addEventListener("click", copyToken);
+
+  document
+    .getElementById("closeFcmTokenBtn")
+    .addEventListener("click", () => {
+      tokenBox.remove();
+    });
 
 } else {
+
+  console.log("⚠️ No FCM token received.");
+
+  alert("⚠️ Firebase did not provide an FCM token.");
+
+}else {
 
   console.log("⚠️ No FCM token received.");
 
