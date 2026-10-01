@@ -85,14 +85,18 @@ async function enablePushNotifications() {
 
     if (token) {
 
-      console.log("✅ FCM registration token:");
-      console.log(token);
+  console.log("✅ FCM registration token:");
+  console.log(token);
 
-    } else {
+  alert("✅ AquaSense notifications are connected successfully!");
 
-      console.log("⚠️ No FCM token received.");
+} else {
 
-    }
+  console.log("⚠️ No FCM token received.");
+
+  alert("⚠️ Firebase did not provide an FCM token.");
+
+}
 
   } catch (error) {
 
