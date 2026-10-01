@@ -114,15 +114,45 @@ if (token) {
   console.log("✅ FCM registration token:");
   console.log(token);
 
-  const copyToken = async () => {
-    try {
-      await navigator.clipboard.writeText(token);
-      alert("✅ FCM token copied successfully!");
-    } catch (error) {
-      alert("❌ Could not copy token. Please copy it manually.");
-      console.error(error);
-    }
-  };
+  // Save FCM token to Firestore
+  if (auth.currentUser) {
+
+    await setDoc(
+      doc(db, "fcmTokens", auth.currentUser.uid),
+      {
+        token: token,
+        userId: auth.currentUser.uid,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    console.log("✅ FCM token saved to Firestore.");
+
+    alert(
+      "✅ AquaSense notifications connected!\n\n" +
+      "FCM token has been saved to Firebase."
+    );
+
+  } else {
+
+    console.log("⚠️ User is not logged in.");
+
+    alert(
+      "⚠️ Please login first, then enable notifications."
+    );
+
+  }
+
+} else {
+
+  console.log("⚠️ No FCM token received.");
+
+  alert(
+    "⚠️ Firebase did not provide an FCM token."
+  );
+
+}
 
   const tokenBox = document.createElement("div");
 
