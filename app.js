@@ -56,6 +56,8 @@ const messaging = getMessaging(app);
 
 async function enablePushNotifications() {
 
+  alert("🔔 Notification button is working!");
+
   try {
 
     console.log("🔔 Requesting notification permission...");
