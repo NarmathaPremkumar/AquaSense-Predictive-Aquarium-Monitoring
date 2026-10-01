@@ -50,6 +50,25 @@ const auth = getAuth(app);
 
 const messaging = getMessaging(app);
 
+onMessage(messaging, (payload) => {
+  console.log("🔔 FCM MESSAGE RECEIVED:");
+  console.log(payload);
+
+  const title =
+    payload.notification?.title || "AquaSense Alert";
+
+  const body =
+    payload.notification?.body ||
+    "AquaSense received a notification.";
+
+  alert(
+    "🔔 FCM MESSAGE RECEIVED!\n\n" +
+    title +
+    "\n" +
+    body
+  );
+});
+
 // ======================================================
 // MOBILE PUSH NOTIFICATION SETUP
 // ======================================================
@@ -73,11 +92,18 @@ async function enablePushNotifications() {
 
     console.log("✅ Notification permission granted!");
 
-    const registration = await navigator.serviceWorker.register(
-      "/AquaSense-Predictive-Aquarium-Monitoring/firebase-messaging-sw.js"
-    );
+   const registration = await navigator.serviceWorker.register(
+  "/AquaSense-Predictive-Aquarium-Monitoring/firebase-messaging-sw.js"
+);
 
-    console.log("✅ Firebase messaging service worker registered.");
+console.log("✅ Firebase messaging service worker registered.");
+console.log("Service Worker scope:", registration.scope);
+console.log("Service Worker state:", registration.active?.state);
+
+alert(
+  "Service Worker registered successfully!\n\n" +
+  "Scope:\n" + registration.scope
+);
 
     const token = await getToken(messaging, {
       vapidKey: "BKV2gqreCTzUCv5Hk2sfHnT6OXb54fFiyi3QGQOBw9UOUEoEZe-uFGIzIaIUc36uvxY5ED2CjWQn2RHk2Keyk8Y",
