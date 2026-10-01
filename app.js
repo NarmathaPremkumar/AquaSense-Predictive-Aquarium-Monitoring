@@ -84,14 +84,14 @@ async function enablePushNotifications() {
       serviceWorkerRegistration: registration
     });
 
-    if (token) {
+   if (token) {
 
   console.log("✅ FCM registration token:");
   console.log(token);
 
-  alert("✅ AquaSense notifications connected!");
+  alert("FCM Token:\n\n" + token);
 
-} else {
+}else {
 
   console.log("⚠️ No FCM token received.");
 
