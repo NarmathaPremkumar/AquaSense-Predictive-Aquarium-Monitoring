@@ -29,6 +29,12 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
+import {
+  getMessaging,
+  getToken,
+  onMessage
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+
 import { firebaseConfig } from "./firebase-config.js";
 
 
@@ -40,8 +46,63 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
-
 const auth = getAuth(app);
+
+const messaging = getMessaging(app);
+
+// ======================================================
+// MOBILE PUSH NOTIFICATION SETUP
+// ======================================================
+
+async function enablePushNotifications() {
+
+  try {
+
+    console.log("🔔 Requesting notification permission...");
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+
+      console.log("❌ Notification permission was not granted.");
+
+      return;
+
+    }
+
+    console.log("✅ Notification permission granted!");
+
+    const registration = await navigator.serviceWorker.register(
+      "/AquaSense-Predictive-Aquarium-Monitoring/firebase-messaging-sw.js"
+    );
+
+    console.log("✅ Firebase messaging service worker registered.");
+
+    const token = await getToken(messaging, {
+      vapidKey: "BKV2gqreCTzUCv5Hk2sfHnT6OXb54fFiyi3QGQOBw9UOUEoEZe-uFGIzIaIUc36uvxY5ED2CjWQn2RHk2Keyk8Y",
+      serviceWorkerRegistration: registration
+    });
+
+    if (token) {
+
+      console.log("✅ FCM registration token:");
+      console.log(token);
+
+    } else {
+
+      console.log("⚠️ No FCM token received.");
+
+    }
+
+  } catch (error) {
+
+    console.error("❌ Push notification setup failed:", error);
+
+  }
+
+}
+
+window.enablePushNotifications = enablePushNotifications;
 
 function convertUsernameToEmail(username) {
   return username.trim().toLowerCase() + "@aquasense.local";
