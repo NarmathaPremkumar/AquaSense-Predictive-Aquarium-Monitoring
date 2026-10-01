@@ -84,18 +84,24 @@ async function enablePushNotifications() {
       serviceWorkerRegistration: registration
     });
 
-   if (token) {
+if (token) {
 
   console.log("✅ FCM registration token:");
   console.log(token);
 
-  alert("FCM Token:\n\n" + token);
+  alert(
+    "FCM TOKEN:\n\n" +
+    token +
+    "\n\nCopy this token and use it in Firebase Console → Messaging → Send test message."
+  );
 
-}else {
+} else {
 
   console.log("⚠️ No FCM token received.");
 
-  alert("⚠️ No FCM token received.");
+  alert(
+    "⚠️ Firebase did not provide an FCM token."
+  );
 
 }
 
