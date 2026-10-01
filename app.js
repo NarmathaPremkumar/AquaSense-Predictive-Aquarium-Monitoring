@@ -56,7 +56,6 @@ const messaging = getMessaging(app);
 
 async function enablePushNotifications() {
 
-  alert("🔔 Notification button is working!");
 
   try {
 
@@ -90,13 +89,13 @@ async function enablePushNotifications() {
   console.log("✅ FCM registration token:");
   console.log(token);
 
-  alert("✅ AquaSense notifications are connected successfully!");
+  alert("✅ AquaSense notifications connected!");
 
 } else {
 
   console.log("⚠️ No FCM token received.");
 
-  alert("⚠️ Firebase did not provide an FCM token.");
+  alert("⚠️ No FCM token received.");
 
 }
 
