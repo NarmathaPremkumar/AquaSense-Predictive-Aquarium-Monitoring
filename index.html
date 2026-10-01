@@ -16,6 +16,47 @@
 
 <body>
 
+  <!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen" class="login-screen">
+
+  <div class="login-box">
+
+    <div class="login-logo">🐠</div>
+
+    <h1>AquaSense</h1>
+    <p class="login-subtitle">Predictive Aquarium Monitoring</p>
+
+    <input
+      type="text"
+      id="username"
+      placeholder="Enter username"
+      autocomplete="username"
+    >
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Enter password"
+      autocomplete="current-password"
+    >
+
+    <button onclick="aquaSenseLogin()" class="login-btn">
+      Login
+    </button>
+
+    <button onclick="aquaSenseRegister()" class="register-btn">
+      Create Account
+    </button>
+
+    <p class="login-note">
+      Create an account if you are a new user.
+    </p>
+
+  </div>
+
+</div>
+<!-- =============== END LOGIN SCREEN =============== -->
+
 <div class="app">
 
   <!-- SIDEBAR -->
@@ -57,9 +98,9 @@
         ♙ <span>Profile</span>
       </button>
 
-      <button class="nav-item" id="logoutBtn">
-        ⇥ <span>Logout</span>
-      </button>
+      <button type="button" onclick="window.aquaSenseLogout()">
+    Logout
+</button>
 
     </nav>
 
@@ -1038,7 +1079,7 @@
 
 <!-- MAIN JAVASCRIPT -->
 
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js" defer></script>
 
 
 </body>

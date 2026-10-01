@@ -20,6 +20,15 @@ import {
   onValue
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 import { firebaseConfig } from "./firebase-config.js";
 
 
@@ -31,6 +40,188 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
+
+const auth = getAuth(app);
+
+function convertUsernameToEmail(username) {
+  return username.trim().toLowerCase() + "@aquasense.local";
+}
+
+window.aquaSenseLogin = async function () {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    alert("Please enter username and password.");
+    return;
+  }
+
+  const email = convertUsernameToEmail(username);
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    console.log("✅ AquaSense login successful");
+    console.log("Username:", username);
+    console.log("User UID:", userCredential.user.uid);
+
+    document.getElementById("loginScreen").style.display = "none";
+  
+
+  } catch (error) {
+    console.error("Login failed:", error);
+
+    if (
+      error.code === "auth/invalid-credential" ||
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/user-not-found"
+    ) {
+      alert("❌ Invalid username or password.");
+    } else {
+      alert("❌ Login failed: " + error.message);
+    }
+  }
+};
+
+window.aquaSenseRegister = async function () {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    alert("Please enter username and password.");
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
+    alert("Username can contain only letters, numbers, dot, underscore and hyphen.");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must contain at least 6 characters.");
+    return;
+  }
+
+  const email = convertUsernameToEmail(username);
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    console.log("✅ AquaSense account created");
+    console.log("Username:", username);
+    console.log("User UID:", userCredential.user.uid);
+
+    alert("✅ Account created successfully!");
+
+    document.getElementById("loginScreen").style.display = "none";
+    
+
+  } catch (error) {
+    console.error("Registration failed:", error);
+
+    if (error.code === "auth/email-already-in-use") {
+      alert("❌ This username already exists.");
+    } else {
+      alert("❌ Registration failed: " + error.message);
+    }
+  }
+};
+
+// ======================================================
+// AUTHENTICATION STATE
+// ======================================================
+
+const loginScreen = document.getElementById("loginScreen");
+
+// Show login screen when page first loads
+if (loginScreen) {
+  loginScreen.style.display = "flex";
+}
+
+// Firebase checks whether the user is logged in
+onAuthStateChanged(auth, (user) => {
+
+  if (user) {
+
+    // User is logged in
+    console.log("✅ User is logged in");
+    console.log("Firebase UID:", user.uid);
+
+    if (loginScreen) {
+      loginScreen.style.display = "none";
+    }
+
+  } else {
+
+    // User is NOT logged in
+    console.log("🔐 No user is logged in");
+
+    if (loginScreen) {
+      loginScreen.style.display = "flex";
+    }
+
+  }
+
+});
+
+
+// ======================================================
+// LOGOUT
+// ======================================================
+
+window.aquaSenseLogout = async function () {
+
+  console.log("🔴 Logout button clicked");
+
+  try {
+
+    await signOut(auth);
+
+    console.log("✅ Firebase logout successful");
+
+    // Clear login fields
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+
+    if (username) {
+      username.value = "";
+    }
+
+    if (password) {
+      password.value = "";
+    }
+
+    // onAuthStateChanged() will automatically
+    // show the login screen.
+
+  } catch (error) {
+
+    console.error("❌ Logout error:", error);
+
+    alert("Logout failed: " + error.message);
+
+  }
+
+};
+
+//signInAnonymously(auth)
+//  .then((userCredential) => {
+//    console.log("✅ AquaSense anonymous authentication successful");
+//    console.log("Anonymous User UID:", userCredential.user.uid);
+//  })
+//  .catch((error) => {
+//    console.error("❌ Anonymous authentication failed");
+//    console.error("Error code:", error.code);
+//    console.error("Error message:", error.message);
+//  });
 
 console.log("AquaSense Firebase connected successfully!");
 
@@ -2378,3 +2569,32 @@ if (editCoolerSchedule) {
     }
   );
 }
+
+
+
+window.aquaSenseLogout = async function () {
+  console.log("🔴 Logout button clicked");
+
+  try {
+    await signOut(auth);
+
+    console.log("✅ Firebase logout successful");
+
+    const loginScreen = document.getElementById("loginScreen");
+
+    if (loginScreen) {
+      loginScreen.style.display = "flex";
+    }
+
+    // Clear username and password
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+
+    if (username) username.value = "";
+    if (password) password.value = "";
+
+  } catch (error) {
+    console.error("❌ Logout error:", error);
+    alert("Logout failed: " + error.message);
+  }
+};
