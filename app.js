@@ -443,6 +443,16 @@ if (riskElement) {
     "./firebase-messaging-sw.js"
   );
 
+  console.log(
+  "📱 MOBILE SERVICE WORKER:",
+  registration
+);
+
+console.log(
+  "📱 SERVICE WORKER STATE:",
+  registration?.active?.state
+);
+
 
       console.log(
         "✅ Firebase messaging service worker registered."
@@ -892,12 +902,7 @@ async function showMobileAlertNotification(
   try {
 
     console.log(
-      "📱 Trying to show notification..."
-    );
-
-    console.log(
-      "Notification permission:",
-      Notification.permission
+      "📱 Starting AquaSense notification..."
     );
 
 
@@ -908,11 +913,17 @@ async function showMobileAlertNotification(
     if (!("Notification" in window)) {
 
       console.error(
-        "❌ This browser does not support notifications."
+        "❌ Notifications are not supported."
       );
 
       return;
     }
+
+
+    console.log(
+      "📱 Notification permission:",
+      Notification.permission
+    );
 
 
     // --------------------------------------------------
@@ -924,7 +935,8 @@ async function showMobileAlertNotification(
     ) {
 
       console.error(
-        "❌ Notification permission is not granted."
+        "❌ Notification permission is:",
+        Notification.permission
       );
 
       return;
@@ -935,13 +947,44 @@ async function showMobileAlertNotification(
     // GET SERVICE WORKER
     // --------------------------------------------------
 
-    let registration =
-      await navigator.serviceWorker.getRegistration();
+    const registration =
+      await navigator.serviceWorker.getRegistration(
+        "./"
+      );
 
 
     console.log(
-      "Service worker registration:",
+      "📱 Service worker registration:",
       registration
+    );
+
+
+    if (!registration) {
+
+      console.error(
+        "❌ AquaSense service worker was not found."
+      );
+
+      return;
+    }
+
+
+    // --------------------------------------------------
+    // CHECK ACTIVE SERVICE WORKER
+    // --------------------------------------------------
+
+    if (!registration.active) {
+
+      console.error(
+        "❌ Service worker is registered but not active."
+      );
+
+      return;
+    }
+
+
+    console.log(
+      "✅ Service worker is active."
     );
 
 
@@ -949,50 +992,54 @@ async function showMobileAlertNotification(
     // SHOW NOTIFICATION
     // --------------------------------------------------
 
-    if (registration) {
+    await registration.showNotification(
+      "🚨 AquaSense Alert",
+      {
 
-      await registration.showNotification(
-        "🚨 AquaSense Alert",
-        {
+        body:
+          parameter +
+          ": " +
+          value +
+          "\n" +
+          message,
 
-          body:
-            parameter +
-            ": " +
-            value +
-            "\n" +
-            message,
+        icon:
+          "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
 
-          icon:
-            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
+        badge:
+          "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
 
-          badge:
-            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
+        tag:
+          "aquasense-" +
+          parameter +
+          "-" +
+          Date.now(),
 
-          tag:
-            "aquasense-" +
-            parameter,
+        renotify: true,
 
-          requireInteraction: true
+        silent: false,
 
+        requireInteraction: true,
+
+        data: {
+          parameter: parameter,
+          value: value
         }
-      );
 
-      console.log(
-        "✅ Mobile notification displayed!"
-      );
+      }
+    );
 
-    } else {
 
-      console.error(
-        "❌ No service worker registration found."
-      );
+    console.log(
+      "✅ AquaSense notification sent to service worker."
+    );
 
-    }
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
-      "❌ Notification failed:",
+      "❌ AquaSense notification failed:",
       error
     );
 
@@ -1047,17 +1094,6 @@ async function updateRealtimeAlerts(
     }
   );
 
-  console.log("📱 ALERT NOTIFICATION TEST");
-console.log("TDS Level:", tdsLevel);
-console.log("Turbidity Level:", turbidityLevel);
-console.log("Temperature Level:", temperatureLevel);
-
-
-showMobileAlertNotification(
-  "TEST",
-  "550 ppm",
-  "AquaSense alert system test"
-);
   // ====================================================
 // MOBILE NOTIFICATIONS FOR NEW HIGH ALERTS
 // ====================================================
