@@ -115,7 +115,7 @@
 
       <button class="nav-item" data-page="alerts">
         ♢ <span>Alerts</span>
-        <b id="alertBadge">2</b>
+        <b id="alertBadge" style="display: none;">0</b>
       </button>
 
       <button class="nav-item" data-page="settings">
@@ -259,6 +259,7 @@
 
           <strong id="riskValue">
             LOW
+          
           </strong>
 
           <p>
@@ -304,46 +305,18 @@
         </div>
 
         <p class="system-ok" id="systemMessage">
-          ● Waiting for Firebase data
-        </p>
+  ● Waiting for Firebase data
+</p>
 
-      </div>
+</div>
 
-    </section>
+</div>
 
+</section>
 
+<!-- ================= ANALYTICS ================= -->
 
-    <!-- ================= ANALYTICS ================= -->
-
-    <section id="analytics" class="page">
-
-      <div class="toolbar">
-
-        <div class="tabs">
-
-          <button class="tab active">
-            Temperature
-          </button>
-
-          <button class="tab">
-            TDS
-          </button>
-
-          <button class="tab">
-            Turbidity
-          </button>
-
-        </div>
-
-        <select>
-
-          <option>Last 24 Hours</option>
-
-          <option>Last 7 Days</option>
-
-        </select>
-
-      </div>
+<section id="analytics" class="page">
 
 
       <!-- TEMPERATURE CHART -->
@@ -750,80 +723,7 @@
       </h3>
 
 
-      <div id="activeAlerts">
-
-        <div class="alert high">
-
-          ⚠
-
-          <div>
-
-            <b>
-              High Turbidity
-            </b>
-
-            <p>
-              Turbidity level is above normal range.
-            </p>
-
-          </div>
-
-          <time>
-            10:20 AM<br>
-            May 26, 2025
-          </time>
-
-        </div>
-
-
-        <div class="alert medium">
-
-          ⚠
-
-          <div>
-
-            <b>
-              High TDS
-            </b>
-
-            <p>
-              TDS level is above the configured range.
-            </p>
-
-          </div>
-
-          <time>
-            09:15 AM<br>
-            May 26, 2025
-          </time>
-
-        </div>
-
-
-        <div class="alert success">
-
-          ✓
-
-          <div>
-
-            <b>
-              TDS Level Normalized
-            </b>
-
-            <p>
-              TDS level is back to the normal range.
-            </p>
-
-          </div>
-
-          <time>
-            Yesterday, 08:45 AM<br>
-            May 25, 2025
-          </time>
-
-        </div>
-
-      </div>
+      <div id="activeAlerts"></div>
 
 
       <div class="card history">
@@ -848,84 +748,7 @@
 
           </thead>
 
-          <tbody>
-
-            <tr>
-
-              <td>
-                High Temperature
-              </td>
-
-              <td>
-                <span class="resolved">
-                  Resolved
-                </span>
-              </td>
-
-              <td>
-                May 25, 2025, 04:30 PM
-              </td>
-
-            </tr>
-
-
-            <tr>
-
-              <td>
-                High TDS Level
-              </td>
-
-              <td>
-                <span class="resolved">
-                  Resolved
-                </span>
-              </td>
-
-              <td>
-                May 24, 2025, 11:20 AM
-              </td>
-
-            </tr>
-
-
-            <tr>
-
-              <td>
-                High Turbidity
-              </td>
-
-              <td>
-                <span class="resolved">
-                  Resolved
-                </span>
-              </td>
-
-              <td>
-                May 23, 2025, 06:10 PM
-              </td>
-
-            </tr>
-
-
-            <tr>
-
-              <td>
-                Water Change Recommended
-              </td>
-
-              <td>
-                <span class="resolved">
-                  Resolved
-                </span>
-              </td>
-
-              <td>
-                May 22, 2025, 09:00 AM
-              </td>
-
-            </tr>
-
-          </tbody>
+          <tbody id="alertHistoryBody"></tbody>
 
         </table>
 
