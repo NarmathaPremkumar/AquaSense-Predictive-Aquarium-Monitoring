@@ -1047,6 +1047,17 @@ async function updateRealtimeAlerts(
     }
   );
 
+  console.log("📱 ALERT NOTIFICATION TEST");
+console.log("TDS Level:", tdsLevel);
+console.log("Turbidity Level:", turbidityLevel);
+console.log("Temperature Level:", temperatureLevel);
+
+
+showMobileAlertNotification(
+  "TEST",
+  "550 ppm",
+  "AquaSense alert system test"
+);
   // ====================================================
 // MOBILE NOTIFICATIONS FOR NEW HIGH ALERTS
 // ====================================================
