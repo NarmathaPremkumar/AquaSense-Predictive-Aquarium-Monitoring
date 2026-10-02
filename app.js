@@ -880,6 +880,113 @@ function getTemperatureLevel(temperature) {
 // UPDATE REAL-TIME ALERTS
 // ======================================================
 
+// ======================================================
+// MOBILE ALERT NOTIFICATION
+// ======================================================
+
+async function showMobileAlertNotification(
+  parameter,
+  value,
+  message
+) {
+
+  try {
+
+    // Check browser support
+    if (!("Notification" in window)) {
+
+      console.log(
+        "❌ Browser notifications are not supported."
+      );
+
+      return;
+    }
+
+
+    // Check permission
+    if (
+      Notification.permission !== "granted"
+    ) {
+
+      console.log(
+        "⚠️ Notification permission is not granted."
+      );
+
+      return;
+    }
+
+
+    // Get the Firebase messaging service worker
+    const registration =
+      await navigator.serviceWorker.getRegistration();
+
+
+    if (registration) {
+
+      await registration.showNotification(
+        "🚨 AquaSense Alert",
+        {
+
+          body:
+            parameter +
+            ": " +
+            value +
+            "\n" +
+            message,
+
+          icon:
+            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
+
+          tag:
+            "aquasense-" +
+            parameter,
+
+          vibrate: [
+            200,
+            100,
+            200
+          ]
+
+        }
+      );
+
+      console.log(
+        "📱 Mobile notification shown:",
+        parameter
+      );
+
+    } else {
+
+      // Fallback
+      new Notification(
+        "🚨 AquaSense Alert",
+        {
+
+          body:
+            parameter +
+            ": " +
+            value +
+            "\n" +
+            message,
+
+          icon:
+            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico"
+
+        }
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "❌ Mobile notification error:",
+      error
+    );
+
+  }
+}
+
 async function updateRealtimeAlerts(
   temperature,
   tds,
@@ -926,6 +1033,54 @@ async function updateRealtimeAlerts(
       Temperature: temperatureLevel
     }
   );
+
+  // ====================================================
+// MOBILE NOTIFICATIONS FOR NEW HIGH ALERTS
+// ====================================================
+
+// TDS HIGH
+if (
+  tdsLevel === "HIGH" &&
+  previousAlertLevels.TDS !== "HIGH"
+) {
+
+  showMobileAlertNotification(
+    "TDS",
+    tds + " ppm",
+    "TDS level is high."
+  );
+
+}
+
+
+// TURBIDITY HIGH
+if (
+  turbidityLevel === "HIGH" &&
+  previousAlertLevels.Turbidity !== "HIGH"
+) {
+
+  showMobileAlertNotification(
+    "Turbidity",
+    turbidity + " NTU",
+    "Water is highly turbid."
+  );
+
+}
+
+
+// TEMPERATURE HIGH
+if (
+  temperatureLevel === "HIGH" &&
+  previousAlertLevels.Temperature !== "HIGH"
+) {
+
+  showMobileAlertNotification(
+    "Temperature",
+    temperature + " °C",
+    "Temperature is high."
+  );
+
+}
 
 
   // ----------------------------------------------------
