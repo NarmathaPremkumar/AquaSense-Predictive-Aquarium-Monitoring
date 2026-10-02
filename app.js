@@ -546,7 +546,6 @@ if (riskElement) {
           "FCM token has been saved to Firebase."
         );
 
-
       } else {
 
         console.log(
@@ -881,7 +880,7 @@ function getTemperatureLevel(temperature) {
 // ======================================================
 
 // ======================================================
-// MOBILE ALERT NOTIFICATION
+// LOCAL MOBILE ALERT NOTIFICATION
 // ======================================================
 
 async function showMobileAlertNotification(
@@ -892,34 +891,63 @@ async function showMobileAlertNotification(
 
   try {
 
-    // Check browser support
+    console.log(
+      "📱 Trying to show notification..."
+    );
+
+    console.log(
+      "Notification permission:",
+      Notification.permission
+    );
+
+
+    // --------------------------------------------------
+    // CHECK NOTIFICATION SUPPORT
+    // --------------------------------------------------
+
     if (!("Notification" in window)) {
 
-      console.log(
-        "❌ Browser notifications are not supported."
+      console.error(
+        "❌ This browser does not support notifications."
       );
 
       return;
     }
 
 
-    // Check permission
+    // --------------------------------------------------
+    // CHECK PERMISSION
+    // --------------------------------------------------
+
     if (
       Notification.permission !== "granted"
     ) {
 
-      console.log(
-        "⚠️ Notification permission is not granted."
+      console.error(
+        "❌ Notification permission is not granted."
       );
 
       return;
     }
 
 
-    // Get the Firebase messaging service worker
-    const registration =
+    // --------------------------------------------------
+    // GET SERVICE WORKER
+    // --------------------------------------------------
+
+    let registration =
       await navigator.serviceWorker.getRegistration();
 
+
+    console.log(
+      "Service worker registration:",
+      registration
+    );
+
+
+    // --------------------------------------------------
+    // SHOW NOTIFICATION
+    // --------------------------------------------------
 
     if (registration) {
 
@@ -937,42 +965,26 @@ async function showMobileAlertNotification(
           icon:
             "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
 
+          badge:
+            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico",
+
           tag:
             "aquasense-" +
             parameter,
 
-          vibrate: [
-            200,
-            100,
-            200
-          ]
+          requireInteraction: true
 
         }
       );
 
       console.log(
-        "📱 Mobile notification shown:",
-        parameter
+        "✅ Mobile notification displayed!"
       );
 
     } else {
 
-      // Fallback
-      new Notification(
-        "🚨 AquaSense Alert",
-        {
-
-          body:
-            parameter +
-            ": " +
-            value +
-            "\n" +
-            message,
-
-          icon:
-            "/AquaSense-Predictive-Aquarium-Monitoring/favicon.ico"
-
-        }
+      console.error(
+        "❌ No service worker registration found."
       );
 
     }
@@ -980,11 +992,12 @@ async function showMobileAlertNotification(
   } catch (error) {
 
     console.error(
-      "❌ Mobile notification error:",
+      "❌ Notification failed:",
       error
     );
 
   }
+
 }
 
 async function updateRealtimeAlerts(
