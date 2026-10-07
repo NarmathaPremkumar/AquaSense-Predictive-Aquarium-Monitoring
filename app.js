@@ -46,6 +46,8 @@
   const app = initializeApp(firebaseConfig);
 
   const db = getFirestore(app);
+
+  loadThresholdSettings();
   const rtdb = getDatabase(app);
 
 
@@ -96,6 +98,9 @@
 
       const turbidity =
         Number(data.Turbidity);
+
+      const waterLevel =
+        Number(data.waterLevel);
 
 
       console.log(
@@ -177,6 +182,25 @@
         turbidityValue.textContent =
           Math.round(turbidity);
       }
+
+
+// ==================================================
+// DISPLAY WATER LEVEL
+// ==================================================
+
+const waterLevelValue =
+  document.getElementById(
+    "waterLevelValue"
+  );
+
+if (
+  waterLevelValue &&
+  Number.isFinite(waterLevel)
+) {
+
+  waterLevelValue.textContent =
+    Math.round(waterLevel);
+}
 
 
       // ==================================================
@@ -379,6 +403,58 @@ if (riskElement) {
     }
   );
   const auth = getAuth(app);
+
+  // ======================================================
+// DISPLAY LOGGED-IN USER PROFILE
+// ======================================================
+
+function displayLoggedInUserProfile() {
+
+  const user = auth.currentUser;
+
+  const profileName =
+    document.getElementById("profileUserName");
+
+  const profileEmail =
+    document.getElementById("profileUserEmail");
+
+  if (!profileName || !profileEmail) {
+    return;
+  }
+
+  if (user) {
+
+    // Firebase login email
+    const email = user.email || "";
+
+    // Convert email back to username
+    // Example:
+    // narmatha@aquasense.local
+    // becomes:
+    // narmatha
+    let username = email
+      .split("@")[0];
+
+    // Make first letter capital
+    username =
+      username.charAt(0).toUpperCase() +
+      username.slice(1);
+
+    profileName.textContent =
+      username;
+
+    profileEmail.textContent =
+      email;
+
+  } else {
+
+    profileName.textContent =
+      "User";
+
+    profileEmail.textContent =
+      "---";
+  }
+}
 
   const messaging = getMessaging(app);
 
@@ -700,6 +776,7 @@ console.log(
       if (loginScreen) {
         loginScreen.style.display = "none";
       }
+      displayLoggedInUserProfile();
 
     } else {
 
@@ -772,62 +849,80 @@ console.log(
   // AUTOMATIC REAL-TIME ALERT THRESHOLDS
   // ======================================================
 
-  let alertThresholds = {
-    maxTemperature: 30,
-    minTds: 300,
-    maxTds: 500,
-    maxTurbidity: 50
-  };
-
-
   // ======================================================
-  // GET THRESHOLDS FROM FIRESTORE
-  // ======================================================
+// ALERT THRESHOLD VALUES
+// ======================================================
 
-  onSnapshot(
-    doc(db, "settings", "thresholds"),
-    (snapshot) => {
+let alertThresholds = {
+  maxTemperature: 30,
+  maxTds: 500,
+  maxTurbidity: 50
+};
 
-      if (!snapshot.exists()) {
-        console.log(
-          "Threshold document not found. Using default values."
-        );
-        return;
-      }
 
-      const data = snapshot.data();
+// ======================================================
+// GET THRESHOLDS FROM FIRESTORE
+// ======================================================
 
-      alertThresholds = {
-        maxTemperature: Number(data.maxTemperature ?? 30),
-        minTds: Number(data.minTds ?? 300),
-        maxTds: Number(data.maxTds ?? 500),
-        maxTurbidity: Number(data.maxTurbidity ?? 50)
-      };
+onSnapshot(
+  doc(db, "settings", "thresholds"),
+  (snapshot) => {
+
+    if (!snapshot.exists()) {
 
       console.log(
-        "Alert thresholds updated:",
-        alertThresholds
+        "Threshold document not found. Using default values."
       );
-    },
 
-    (error) => {
-      console.error(
-        "Threshold listener error:",
-        error
-      );
+      return;
     }
-  );
+
+    const data = snapshot.data();
+
+    alertThresholds = {
+
+      maxTemperature:
+        Number(data.maxTemperature ?? 30),
+
+      maxTds:
+        Number(data.maxTDS ?? data.maxTds ?? 500),
+
+      maxTurbidity:
+        Number(data.maxTurbidity ?? 50)
+
+    };
+
+    console.log(
+      "Alert thresholds updated:",
+      alertThresholds
+    );
+  },
+
+  (error) => {
+
+    console.error(
+      "Threshold listener error:",
+      error
+    );
+
+  }
+);
 
 
-  // ======================================================
+// ======================================================
 // REAL-TIME ALERT SYSTEM
 // ======================================================
 
-// Store the previous alert levels
+// Store previous alert levels
+
 let previousAlertLevels = {
+
   TDS: null,
+
   Turbidity: null,
+
   Temperature: null
+
 };
 
 
@@ -837,12 +932,12 @@ let previousAlertLevels = {
 
 function getTdsLevel(tds) {
 
-  if (tds < alertThresholds.minTds) {
-    return "LOW";
-  }
+  if (
+    tds <= alertThresholds.maxTds
+  ) {
 
-  if (tds <= alertThresholds.maxTds) {
     return "MEDIUM";
+
   }
 
   return "HIGH";
@@ -855,12 +950,13 @@ function getTdsLevel(tds) {
 
 function getTurbidityLevel(turbidity) {
 
-  if (turbidity < 10) {
-    return "LOW";
-  }
+  if (
+    turbidity <=
+    alertThresholds.maxTurbidity
+  ) {
 
-  if (turbidity <= alertThresholds.maxTurbidity) {
     return "MEDIUM";
+
   }
 
   return "HIGH";
@@ -879,15 +975,13 @@ function getTemperatureLevel(temperature) {
   ) {
 
     return "NORMAL";
+
   }
 
   return "HIGH";
 }
 
 
-// ======================================================
-// UPDATE REAL-TIME ALERTS
-// ======================================================
 
 // ======================================================
 // LOCAL MOBILE ALERT NOTIFICATION
@@ -2302,79 +2396,6 @@ function updateAlertPage(
 
 
   // ======================================================
-  // PREDICTION CHART
-  // ======================================================
-
-  const predictionChartElement =
-    document.getElementById(
-      "predictionChart"
-    );
-
-
-  if (
-    predictionChartElement &&
-    typeof Chart !== "undefined"
-  ) {
-
-    new Chart(
-      predictionChartElement,
-      {
-
-        type: "line",
-
-        data: {
-
-          labels: [
-            "Now",
-            "+6 Hours",
-            "+12 Hours",
-            "+18 Hours",
-            "+24 Hours"
-          ],
-
-          datasets: [
-
-            {
-              label:
-                "Predicted TDS (ppm)",
-
-              data: [
-                350,
-                352,
-                355,
-                358,
-                360
-              ],
-
-              tension: 0.3,
-
-              fill: false
-            }
-
-          ]
-
-        },
-
-        options: {
-          responsive: true
-        }
-
-      }
-    );
-
-  } else if (
-    predictionChartElement &&
-    typeof Chart === "undefined"
-  ) {
-
-    console.warn(
-      "Chart.js is not available. Prediction chart skipped."
-    );
-  }
-
-
-
-  // ======================================================
   // WATER QUALITY SCORE
   // Based on REAL-TIME TDS + TURBIDITY
   // ======================================================
@@ -3212,36 +3233,161 @@ const turbidityData = [];
 
   );
 
+// ======================================================
+// LOAD THRESHOLDS FROM FIRESTORE
+// ======================================================
 
-  // ======================================================
-  // THRESHOLD SETTINGS
-  // ======================================================
+function loadThresholdSettings() {
 
-  const saveThresholds =
-    document.getElementById(
-      "saveThresholds"
-    );
+  const thresholdRef =
+    doc(db, "settings", "thresholds");
+
+  onSnapshot(
+    thresholdRef,
+    (snapshot) => {
+
+      if (!snapshot.exists()) {
+
+        console.log(
+          "⚠️ Threshold document does not exist."
+        );
+
+        return;
+      }
+
+      const data = snapshot.data();
+
+      console.log(
+        "🔥 Thresholds received from Firestore:",
+        data
+      );
 
 
-  if (saveThresholds) {
+      // Update the actual threshold values
 
-    saveThresholds.addEventListener(
-      "click",
-      async () => {
+      if (
+        Number.isFinite(
+          Number(data.maxTemperature)
+        )
+      ) {
+
+        alertThresholds.maxTemperature =
+          Number(data.maxTemperature);
+
+      }
+
+
+      if (
+        Number.isFinite(
+          Number(data.maxTDS)
+        )
+      ) {
+
+        alertThresholds.maxTds =
+          Number(data.maxTDS);
+
+      }
+
+
+      if (
+        Number.isFinite(
+          Number(data.maxTurbidity)
+        )
+      ) {
+
+        alertThresholds.maxTurbidity =
+          Number(data.maxTurbidity);
+
+      }
+
+
+      // Update the Settings page fields
+
+      const temperatureInput =
+        document.getElementById(
+          "maxTemperature"
+        );
+
+      const tdsInput =
+        document.getElementById(
+          "maxTds"
+        );
+
+      const turbidityInput =
+        document.getElementById(
+          "maxTurbidity"
+        );
+
+
+      if (temperatureInput) {
+
+        temperatureInput.value =
+          alertThresholds.maxTemperature;
+
+      }
+
+
+      if (tdsInput) {
+
+        tdsInput.value =
+          alertThresholds.maxTds;
+
+      }
+
+
+      if (turbidityInput) {
+
+        turbidityInput.value =
+          alertThresholds.maxTurbidity;
+
+      }
+
+
+      console.log(
+        "✅ Active thresholds:",
+        alertThresholds
+      );
+
+    },
+
+    (error) => {
+
+      console.error(
+        "❌ Failed to read thresholds:",
+        error
+      );
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// SAVE THRESHOLDS TO FIRESTORE
+// ======================================================
+
+const saveThresholdsButton =
+  document.getElementById(
+    "saveThresholds"
+  );
+
+
+if (saveThresholdsButton) {
+
+  saveThresholdsButton.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        // Read values from webpage
 
         const maxTemperature =
           Number(
             document.getElementById(
               "maxTemperature"
-            )?.value
-          );
-
-
-        const minTds =
-          Number(
-            document.getElementById(
-              "minTds"
-            )?.value
+            ).value
           );
 
 
@@ -3249,7 +3395,7 @@ const turbidityData = [];
           Number(
             document.getElementById(
               "maxTds"
-            )?.value
+            ).value
           );
 
 
@@ -3257,17 +3403,16 @@ const turbidityData = [];
           Number(
             document.getElementById(
               "maxTurbidity"
-            )?.value
+            ).value
           );
 
 
-        // ------------------------------------------------
-        // VALIDATE VALUES
-        // ------------------------------------------------
+        // ==================================================
+        // VALIDATION
+        // ==================================================
 
         if (
           !Number.isFinite(maxTemperature) ||
-          !Number.isFinite(minTds) ||
           !Number.isFinite(maxTds) ||
           !Number.isFinite(maxTurbidity)
         ) {
@@ -3281,191 +3426,118 @@ const turbidityData = [];
 
 
         if (
-          minTds >= maxTds
+          maxTemperature < 0 ||
+          maxTds < 0 ||
+          maxTurbidity < 0
         ) {
 
           alert(
-            "Minimum TDS must be lower than Maximum TDS."
+            "Threshold values cannot be negative."
           );
 
           return;
         }
 
 
-        try {
+        // ==================================================
+        // UPDATE LOCAL ACTIVE THRESHOLDS
+        // ==================================================
 
-          await setDoc(
+        alertThresholds.maxTemperature =
+          maxTemperature;
 
-            doc(
-              db,
-              "settings",
-              "thresholds"
-            ),
+        alertThresholds.maxTds =
+          maxTds;
 
-            {
-              maxTemperature:
-                maxTemperature,
-
-              minTds:
-                minTds,
-
-              maxTds:
-                maxTds,
-
-              maxTurbidity:
-                maxTurbidity,
-
-              updatedAt:
-                serverTimestamp()
-            }
-
-          );
+        alertThresholds.maxTurbidity =
+          maxTurbidity;
 
 
-          alert(
-            "Threshold settings saved!"
-          );
+        // ==================================================
+        // SAVE TO FIRESTORE
+        // ==================================================
+
+        await setDoc(
+
+          doc(
+            db,
+            "settings",
+            "thresholds"
+          ),
+
+          {
+            maxTemperature:
+              maxTemperature,
+
+            maxTDS:
+              maxTds,
+
+            maxTurbidity:
+              maxTurbidity,
+
+            updatedAt:
+              serverTimestamp()
+          },
+
+          {
+            merge: true
+          }
+
+        );
 
 
-          console.log(
-            "Thresholds saved successfully"
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Threshold save error:",
-            error
-          );
+        console.log(
+          "✅ Thresholds saved to Firestore"
+        );
 
 
-          alert(
-            "Unable to save threshold settings."
-          );
-        }
+        console.log(
+          "Max Temperature:",
+          maxTemperature
+        );
+
+        console.log(
+          "Max TDS:",
+          maxTds
+        );
+
+        console.log(
+          "Max Turbidity:",
+          maxTurbidity
+        );
+
+
+        alert(
+          "✅ Threshold settings saved successfully!"
+        );
 
       }
-    );
-  }
+
+      catch (error) {
+
+        console.error(
+          "❌ Failed to save thresholds:",
+          error
+        );
+
+
+        alert(
+          "❌ Failed to save threshold settings."
+        );
+
+      }
+
+    }
+  );
+
+}
 
 
   // ======================================================
   // COOLER SCHEDULE
   // ======================================================
 
-  const editCoolerSchedule =
-    document.getElementById(
-      "editCoolerSchedule"
-    );
-
-
-  if (editCoolerSchedule) {
-
-    editCoolerSchedule.addEventListener(
-      "click",
-      async () => {
-
-        const startTime =
-          prompt(
-            "Enter cooler start time (example: 12:00 PM):",
-            "12:00 PM"
-          );
-
-
-        if (!startTime) {
-          return;
-        }
-
-
-        const durationInput =
-          prompt(
-            "Enter cooler duration in hours:",
-            "4"
-          );
-
-
-        if (!durationInput) {
-          return;
-        }
-
-
-        const duration =
-          Number(
-            durationInput
-          );
-
-
-        // ------------------------------------------------
-        // VALIDATE DURATION
-        // ------------------------------------------------
-
-        if (
-          !Number.isFinite(duration) ||
-          duration <= 0
-        ) {
-
-          alert(
-            "Please enter a valid duration."
-          );
-
-          return;
-        }
-
-
-        try {
-
-          await setDoc(
-
-            doc(
-              db,
-              "schedules",
-              "cooler"
-            ),
-
-            {
-              enabled:
-                true,
-
-              startTime:
-                startTime,
-
-              duration:
-                duration,
-
-              updatedAt:
-                serverTimestamp()
-            }
-
-          );
-
-
-          alert(
-            "Cooler schedule saved successfully!"
-          );
-
-
-          console.log(
-            "Cooler schedule saved:",
-            startTime,
-            duration
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Cooler schedule error:",
-            error
-          );
-
-
-          alert(
-            "Unable to save cooler schedule."
-          );
-        }
-
-      }
-    );
-  }
+  
 
 
 
@@ -3495,3 +3567,1555 @@ const turbidityData = [];
       alert("Logout failed: " + error.message);
     }
   };
+  // ======================================================
+// AQUASENSE PREDICTION SYSTEM
+// ======================================================
+
+let predictionChart = null;
+
+let sensorHistoryForPrediction = [];
+
+
+// ======================================================
+// LOAD SENSOR HISTORY
+// ======================================================
+
+function loadPredictionHistory() {
+
+  const historyRef =
+    ref(
+      rtdb,
+      "AquaSmart/SensorHistory"
+    );
+
+
+  onValue(
+    historyRef,
+    (snapshot) => {
+
+      const data = snapshot.val();
+
+
+      if (!data) {
+
+        console.log(
+          "⚠️ No SensorHistory data available."
+        );
+
+        return;
+
+      }
+
+
+      const history = [];
+
+
+      Object.keys(data).forEach(
+        (key) => {
+
+          const item = data[key];
+
+
+          if (!item) {
+            return;
+          }
+
+
+          const tds =
+            Number(item.TDS);
+
+
+          const temperature =
+            Number(item.Temperature);
+
+
+          const turbidity =
+            Number(item.Turbidity);
+
+
+          const timestamp =
+            Number(item.Timestamp);
+
+
+          if (
+            !Number.isFinite(tds) ||
+            !Number.isFinite(temperature) ||
+            !Number.isFinite(turbidity) ||
+            !Number.isFinite(timestamp)
+          ) {
+
+            return;
+
+          }
+
+
+          history.push({
+
+            id: key,
+
+            timestamp: timestamp,
+
+            tds: tds,
+
+            temperature: temperature,
+
+            turbidity: turbidity
+
+          });
+
+        }
+      );
+
+
+      // Sort oldest → newest
+
+      history.sort(
+        (a, b) =>
+          a.timestamp - b.timestamp
+      );
+
+
+      // Use the latest 20 readings
+
+      sensorHistoryForPrediction =
+        history.slice(-20);
+
+
+      console.log(
+        "📊 Sensor history used for prediction:",
+        sensorHistoryForPrediction
+      );
+
+
+      if (
+        sensorHistoryForPrediction.length < 5
+      ) {
+
+        console.log(
+          "⚠️ Need at least 5 sensor history readings for prediction."
+        );
+
+        return;
+
+      }
+
+
+      generatePrediction();
+
+    },
+
+    (error) => {
+
+      console.error(
+        "❌ SensorHistory prediction error:",
+        error
+      );
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// TREND PREDICTION
+// ======================================================
+
+function calculateTrendPrediction(
+  history,
+  valueKey,
+  hoursAhead
+) {
+
+  if (
+    !history ||
+    history.length < 2
+  ) {
+
+    return null;
+
+  }
+
+
+  const points =
+    history.slice(-20);
+
+
+  const firstTimestamp =
+    points[0].timestamp;
+
+
+  const x =
+    points.map(
+      (item) =>
+        (
+          item.timestamp -
+          firstTimestamp
+        ) /
+        (1000 * 60 * 60)
+    );
+
+
+  const y =
+    points.map(
+      (item) =>
+        Number(item[valueKey])
+    );
+
+
+  const n = x.length;
+
+
+  const sumX =
+    x.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    );
+
+
+  const sumY =
+    y.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    );
+
+
+  const sumXY =
+    x.reduce(
+      (sum, value, index) =>
+        sum +
+        value *
+        y[index],
+      0
+    );
+
+
+  const sumXX =
+    x.reduce(
+      (sum, value) =>
+        sum +
+        value * value,
+      0
+    );
+
+
+  const denominator =
+    (
+      n * sumXX
+    ) -
+    (
+      sumX * sumX
+    );
+
+
+  if (
+    denominator === 0
+  ) {
+
+    return y[y.length - 1];
+
+  }
+
+
+  const slope =
+    (
+      (n * sumXY) -
+      (sumX * sumY)
+    ) /
+    denominator;
+
+
+  const intercept =
+    (
+      sumY -
+      slope * sumX
+    ) /
+    n;
+
+
+  const latestX =
+    x[x.length - 1];
+
+
+  const futureX =
+    latestX +
+    hoursAhead;
+
+
+  const prediction =
+    intercept +
+    slope * futureX;
+
+
+  return prediction;
+
+}
+
+
+// ======================================================
+// GENERATE PREDICTION
+// ======================================================
+
+function generatePrediction() {
+
+  const history =
+    sensorHistoryForPrediction;
+
+
+  if (
+    history.length < 5
+  ) {
+
+    return;
+
+  }
+
+
+  const latest =
+    history[
+      history.length - 1
+    ];
+
+
+  // ====================================================
+  // +24 HOUR PREDICTIONS
+  // ====================================================
+
+  let predictedTemperature =
+    calculateTrendPrediction(
+      history,
+      "temperature",
+      24
+    );
+
+
+  let predictedTds =
+    calculateTrendPrediction(
+      history,
+      "tds",
+      24
+    );
+
+
+  let predictedTurbidity =
+    calculateTrendPrediction(
+      history,
+      "turbidity",
+      24
+    );
+
+
+  // ====================================================
+  // PREVENT NEGATIVE SENSOR VALUES
+  // ====================================================
+
+  predictedTemperature =
+    Math.max(
+      0,
+      predictedTemperature
+    );
+
+
+  predictedTds =
+    Math.max(
+      0,
+      predictedTds
+    );
+
+
+  predictedTurbidity =
+    Math.max(
+      0,
+      predictedTurbidity
+    );
+
+
+  // ====================================================
+  // ROUND VALUES
+  // ====================================================
+
+  predictedTemperature =
+    Number(
+      predictedTemperature.toFixed(1)
+    );
+
+
+  predictedTds =
+    Math.round(
+      predictedTds
+    );
+
+
+  predictedTurbidity =
+    Math.round(
+      predictedTurbidity
+    );
+
+
+  // ====================================================
+  // UPDATE PREDICTION CARDS
+  // ====================================================
+
+  const temperatureElement =
+    document.getElementById(
+      "predictedTemperature"
+    );
+
+
+  const tdsElement =
+    document.getElementById(
+      "predictedTds"
+    );
+
+
+  const turbidityElement =
+    document.getElementById(
+      "predictedTurbidity"
+    );
+
+
+  if (temperatureElement) {
+
+    temperatureElement.textContent =
+      predictedTemperature;
+
+  }
+
+
+  if (tdsElement) {
+
+    tdsElement.textContent =
+      predictedTds;
+
+  }
+
+
+  if (turbidityElement) {
+
+    turbidityElement.textContent =
+      predictedTurbidity;
+
+  }
+
+
+  // ====================================================
+  // CALCULATE CHANGE
+  // ====================================================
+
+  const temperatureChange =
+    predictedTemperature -
+    latest.temperature;
+
+
+  const tdsChange =
+    predictedTds -
+    latest.tds;
+
+
+  const turbidityChange =
+    predictedTurbidity -
+    latest.turbidity;
+
+
+  const temperatureChangeElement =
+    document.getElementById(
+      "temperaturePredictionChange"
+    );
+
+
+  const tdsChangeElement =
+    document.getElementById(
+      "tdsPredictionChange"
+    );
+
+
+  const turbidityChangeElement =
+    document.getElementById(
+      "turbidityPredictionChange"
+    );
+
+
+  if (temperatureChangeElement) {
+
+    temperatureChangeElement.textContent =
+      formatPredictionChange(
+        temperatureChange,
+        "°C"
+      );
+
+  }
+
+
+  if (tdsChangeElement) {
+
+    tdsChangeElement.textContent =
+      formatPredictionChange(
+        tdsChange,
+        "ppm"
+      );
+
+  }
+
+
+  if (turbidityChangeElement) {
+
+    turbidityChangeElement.textContent =
+      formatPredictionChange(
+        turbidityChange,
+        "NTU"
+      );
+
+  }
+
+
+  // ====================================================
+  // RISK CALCULATION
+  // SAME AS DASHBOARD
+  // ====================================================
+
+  const predictedScore =
+    calculateWaterQualityScore(
+      predictedTds,
+      predictedTurbidity
+    );
+
+
+  const predictedRisk =
+    getRiskLevel(
+      predictedScore
+    );
+
+
+  const predictedRiskElement =
+    document.getElementById(
+      "predictedRisk"
+    );
+
+
+  if (predictedRiskElement) {
+
+    predictedRiskElement.textContent =
+      predictedRisk;
+
+  }
+
+
+  // ====================================================
+  // COMPARE CURRENT VS PREDICTED RISK
+  // ====================================================
+
+  const currentScore =
+    calculateWaterQualityScore(
+      latest.tds,
+      latest.turbidity
+    );
+
+
+  const riskTrendElement =
+    document.getElementById(
+      "predictionRiskTrend"
+    );
+
+
+  if (riskTrendElement) {
+
+    if (
+      predictedScore >
+      currentScore
+    ) {
+
+      riskTrendElement.textContent =
+        "(Improving)";
+
+    }
+
+    else if (
+      predictedScore <
+      currentScore
+    ) {
+
+      riskTrendElement.textContent =
+        "(Increasing)";
+
+    }
+
+    else {
+
+      riskTrendElement.textContent =
+        "(Stable)";
+
+    }
+
+  }
+
+
+  // ====================================================
+  // CREATE PREDICTION GRAPH
+  // ====================================================
+
+  createPredictionChart(
+    history
+  );
+
+}
+
+
+// ======================================================
+// FORMAT CHANGE
+// ======================================================
+
+function formatPredictionChange(
+  value,
+  unit
+) {
+
+  if (value > 0) {
+
+    return (
+      "↑ " +
+      Math.abs(
+        value
+      ).toFixed(
+        unit === "°C"
+          ? 1
+          : 0
+      ) +
+      " " +
+      unit
+    );
+
+  }
+
+
+  if (value < 0) {
+
+    return (
+      "↓ " +
+      Math.abs(
+        value
+      ).toFixed(
+        unit === "°C"
+          ? 1
+          : 0
+      ) +
+      " " +
+      unit
+    );
+
+  }
+
+
+  return "→ No change";
+
+}
+
+
+// ======================================================
+// PREDICTION GRAPH
+// ======================================================
+
+// ======================================================
+// PREDICTION GRAPHS
+// ======================================================
+
+let temperaturePredictionChart = null;
+let tdsPredictionChart = null;
+let turbidityPredictionChart = null;
+
+
+function createPredictionChart(history) {
+
+  if (!history || history.length < 5) {
+    console.log("Not enough SensorHistory data.");
+    return;
+  }
+
+
+  // ====================================================
+  // LAST 5 SENSOR HISTORY VALUES
+  // ====================================================
+
+  const recentHistory =
+    history.slice(-5);
+
+
+  const labels = [
+    "History 1",
+    "History 2",
+    "History 3",
+    "History 4",
+    "Now",
+    "+6 Hours",
+    "+12 Hours",
+    "+18 Hours",
+    "+24 Hours"
+  ];
+
+
+  // ====================================================
+  // TEMPERATURE
+  // ====================================================
+
+  const temperatureHistory =
+    recentHistory.map(
+      item => Number(item.temperature)
+    );
+
+
+  const temperaturePrediction = [
+
+    temperatureHistory[4],
+
+    calculateTrendPrediction(
+      history,
+      "temperature",
+      6
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "temperature",
+      12
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "temperature",
+      18
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "temperature",
+      24
+    )
+
+  ].map(
+    value =>
+      Number(
+        Math.max(0, value).toFixed(1)
+      )
+  );
+
+
+  // ====================================================
+  // TDS
+  // ====================================================
+
+  const tdsHistory =
+    recentHistory.map(
+      item => Number(item.tds)
+    );
+
+
+  const tdsPrediction = [
+
+    tdsHistory[4],
+
+    calculateTrendPrediction(
+      history,
+      "tds",
+      6
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "tds",
+      12
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "tds",
+      18
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "tds",
+      24
+    )
+
+  ].map(
+    value =>
+      Math.round(
+        Math.max(0, value)
+      )
+  );
+
+
+  // ====================================================
+  // TURBIDITY
+  // ====================================================
+
+  const turbidityHistory =
+    recentHistory.map(
+      item => Number(item.turbidity)
+    );
+
+
+  const turbidityPrediction = [
+
+    turbidityHistory[4],
+
+    calculateTrendPrediction(
+      history,
+      "turbidity",
+      6
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "turbidity",
+      12
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "turbidity",
+      18
+    ),
+
+    calculateTrendPrediction(
+      history,
+      "turbidity",
+      24
+    )
+
+  ].map(
+    value =>
+      Math.round(
+        Math.max(0, value)
+      )
+  );
+
+
+  // ====================================================
+  // TEMPERATURE GRAPH
+  // ====================================================
+
+  const temperatureCanvas =
+    document.getElementById(
+      "temperaturePredictionChart"
+    );
+
+
+  if (temperatureCanvas) {
+
+    if (temperaturePredictionChart) {
+      temperaturePredictionChart.destroy();
+    }
+
+
+    temperaturePredictionChart =
+      new Chart(
+        temperatureCanvas,
+        {
+
+          type: "line",
+
+          data: {
+
+            labels: labels,
+
+            datasets: [
+
+              {
+                label: "Sensor History",
+
+                data: [
+
+                  temperatureHistory[0],
+                  temperatureHistory[1],
+                  temperatureHistory[2],
+                  temperatureHistory[3],
+                  temperatureHistory[4],
+
+                  null,
+                  null,
+                  null,
+                  null
+
+                ],
+
+                tension: 0.3,
+
+                fill: false
+              },
+
+
+              {
+                label:
+                  "Predicted Temperature (°C)",
+
+                data: [
+
+                  null,
+                  null,
+                  null,
+                  null,
+
+                  temperaturePrediction[0],
+                  temperaturePrediction[1],
+                  temperaturePrediction[2],
+                  temperaturePrediction[3],
+                  temperaturePrediction[4]
+
+                ],
+
+                tension: 0.3,
+
+                borderDash: [6, 6],
+
+                fill: false
+              }
+
+            ]
+
+          },
+
+          options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
+
+          }
+
+        }
+      );
+
+  }
+
+
+  // ====================================================
+  // TDS GRAPH
+  // ====================================================
+
+  const tdsCanvas =
+    document.getElementById(
+      "tdsPredictionChart"
+    );
+
+
+  if (tdsCanvas) {
+
+    if (tdsPredictionChart) {
+      tdsPredictionChart.destroy();
+    }
+
+
+    tdsPredictionChart =
+      new Chart(
+        tdsCanvas,
+        {
+
+          type: "line",
+
+          data: {
+
+            labels: labels,
+
+            datasets: [
+
+              {
+                label: "Sensor History",
+
+                data: [
+
+                  tdsHistory[0],
+                  tdsHistory[1],
+                  tdsHistory[2],
+                  tdsHistory[3],
+                  tdsHistory[4],
+
+                  null,
+                  null,
+                  null,
+                  null
+
+                ],
+
+                tension: 0.3,
+
+                fill: false
+              },
+
+
+              {
+                label:
+                  "Predicted TDS (ppm)",
+
+                data: [
+
+                  null,
+                  null,
+                  null,
+                  null,
+
+                  tdsPrediction[0],
+                  tdsPrediction[1],
+                  tdsPrediction[2],
+                  tdsPrediction[3],
+                  tdsPrediction[4]
+
+                ],
+
+                tension: 0.3,
+
+                borderDash: [6, 6],
+
+                fill: false
+              }
+
+            ]
+
+          },
+
+          options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
+
+          }
+
+        }
+      );
+
+  }
+
+
+  // ====================================================
+  // TURBIDITY GRAPH
+  // ====================================================
+
+  const turbidityCanvas =
+    document.getElementById(
+      "turbidityPredictionChart"
+    );
+
+
+  if (turbidityCanvas) {
+
+    if (turbidityPredictionChart) {
+      turbidityPredictionChart.destroy();
+    }
+
+
+    turbidityPredictionChart =
+      new Chart(
+        turbidityCanvas,
+        {
+
+          type: "line",
+
+          data: {
+
+            labels: labels,
+
+            datasets: [
+
+              {
+                label: "Sensor History",
+
+                data: [
+
+                  turbidityHistory[0],
+                  turbidityHistory[1],
+                  turbidityHistory[2],
+                  turbidityHistory[3],
+                  turbidityHistory[4],
+
+                  null,
+                  null,
+                  null,
+                  null
+
+                ],
+
+                tension: 0.3,
+
+                fill: false
+              },
+
+
+              {
+                label:
+                  "Predicted Turbidity (NTU)",
+
+                data: [
+
+                  null,
+                  null,
+                  null,
+                  null,
+
+                  turbidityPrediction[0],
+                  turbidityPrediction[1],
+                  turbidityPrediction[2],
+                  turbidityPrediction[3],
+                  turbidityPrediction[4]
+
+                ],
+
+                tension: 0.3,
+
+                borderDash: [6, 6],
+
+                fill: false
+              }
+
+            ]
+
+          },
+
+          options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false
+
+          }
+
+        }
+      );
+
+  }
+
+
+  console.log(
+    "✅ Prediction graphs created from SensorHistory."
+  );
+
+}
+
+
+// ======================================================
+// WATER TANK INFO EDIT
+// ======================================================
+
+function setupWaterTankInfo() {
+
+  const editButton =
+    document.getElementById(
+      "editWaterTankBtn"
+    );
+
+  const saveButton =
+    document.getElementById(
+      "saveWaterTankBtn"
+    );
+
+  const cancelButton =
+    document.getElementById(
+      "cancelWaterTankBtn"
+    );
+
+  const viewSection =
+    document.getElementById(
+      "waterTankView"
+    );
+
+  const editSection =
+    document.getElementById(
+      "waterTankEdit"
+    );
+
+
+  const systemNameDisplay =
+    document.getElementById(
+      "systemNameDisplay"
+    );
+
+  const waterTypeDisplay =
+    document.getElementById(
+      "waterTypeDisplay"
+    );
+
+  const monitoringDisplay =
+    document.getElementById(
+      "monitoringDisplay"
+    );
+
+
+  const systemNameInput =
+    document.getElementById(
+      "systemNameInput"
+    );
+
+  const waterTypeInput =
+    document.getElementById(
+      "waterTypeInput"
+    );
+
+  const monitoringInput =
+    document.getElementById(
+      "monitoringInput"
+    );
+
+
+  // --------------------------------------------------
+  // LOAD SAVED INFORMATION
+  // --------------------------------------------------
+
+  const savedSystemName =
+    localStorage.getItem(
+      "aquaSenseSystemName"
+    );
+
+  const savedWaterType =
+    localStorage.getItem(
+      "aquaSenseWaterType"
+    );
+
+  const savedMonitoring =
+    localStorage.getItem(
+      "aquaSenseMonitoring"
+    );
+
+
+  if (savedSystemName) {
+
+    systemNameDisplay.textContent =
+      savedSystemName;
+
+    systemNameInput.value =
+      savedSystemName;
+
+  }
+
+
+  if (savedWaterType) {
+
+    waterTypeDisplay.textContent =
+      savedWaterType;
+
+    waterTypeInput.value =
+      savedWaterType;
+
+  }
+
+
+  if (savedMonitoring) {
+
+    monitoringDisplay.textContent =
+      savedMonitoring;
+
+    monitoringInput.value =
+      savedMonitoring;
+
+  }
+
+
+  // --------------------------------------------------
+  // EDIT BUTTON
+  // --------------------------------------------------
+
+  editButton.addEventListener(
+    "click",
+    () => {
+
+      systemNameInput.value =
+        systemNameDisplay.textContent;
+
+      waterTypeInput.value =
+        waterTypeDisplay.textContent;
+
+      monitoringInput.value =
+        monitoringDisplay.textContent;
+
+
+      viewSection.style.display =
+        "none";
+
+      editSection.style.display =
+        "flex";
+
+      editButton.style.display =
+        "none";
+
+    }
+  );
+
+
+  // --------------------------------------------------
+  // SAVE BUTTON
+  // --------------------------------------------------
+
+  saveButton.addEventListener(
+    "click",
+    () => {
+
+      const systemName =
+        systemNameInput.value.trim();
+
+      const waterType =
+        waterTypeInput.value.trim();
+
+      const monitoring =
+        monitoringInput.value.trim();
+
+
+      if (!systemName ||
+          !waterType ||
+          !monitoring) {
+
+        alert(
+          "Please fill in all Water Tank Info fields."
+        );
+
+        return;
+      }
+
+
+      // Update display
+
+      systemNameDisplay.textContent =
+        systemName;
+
+      waterTypeDisplay.textContent =
+        waterType;
+
+      monitoringDisplay.textContent =
+        monitoring;
+
+
+      // Save locally
+
+      localStorage.setItem(
+        "aquaSenseSystemName",
+        systemName
+      );
+
+      localStorage.setItem(
+        "aquaSenseWaterType",
+        waterType
+      );
+
+      localStorage.setItem(
+        "aquaSenseMonitoring",
+        monitoring
+      );
+
+
+      // Return to view mode
+
+      editSection.style.display =
+        "none";
+
+      viewSection.style.display =
+        "flex";
+
+      editButton.style.display =
+        "inline-block";
+
+    }
+  );
+
+
+  // --------------------------------------------------
+  // CANCEL BUTTON
+  // --------------------------------------------------
+
+  cancelButton.addEventListener(
+    "click",
+    () => {
+
+      editSection.style.display =
+        "none";
+
+      viewSection.style.display =
+        "flex";
+
+      editButton.style.display =
+        "inline-block";
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// START WATER TANK INFO
+// ======================================================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    setupWaterTankInfo();
+
+  }
+);
+
+
+// ======================================================
+// START PREDICTION LISTENER
+// ======================================================
+
+loadPredictionHistory();
+
+
+// ======================================================
+// WATER TANK INFO EDIT
+// ======================================================
+
+const editWaterInfoBtn =
+  document.getElementById("editWaterInfoBtn");
+
+const cancelWaterInfoBtn =
+  document.getElementById("cancelWaterInfoBtn");
+
+const saveWaterInfoBtn =
+  document.getElementById("saveWaterInfoBtn");
+
+const waterInfoView =
+  document.getElementById("waterInfoView");
+
+const waterInfoEdit =
+  document.getElementById("waterInfoEdit");
+
+
+// ======================================================
+// EDIT WATER INFO
+// ======================================================
+
+if (editWaterInfoBtn) {
+
+  editWaterInfoBtn.addEventListener("click", () => {
+
+    // Put current values into input boxes
+
+    document.getElementById(
+      "systemNameInput"
+    ).value =
+      document.getElementById(
+        "systemNameDisplay"
+      ).textContent.trim();
+
+
+    document.getElementById(
+      "waterTypeInput"
+    ).value =
+      document.getElementById(
+        "waterTypeDisplay"
+      ).textContent.trim();
+
+
+    document.getElementById(
+      "monitoringInput"
+    ).value =
+      document.getElementById(
+        "monitoringDisplay"
+      ).textContent.trim();
+
+
+    // Hide normal view
+
+    waterInfoView.style.display = "none";
+
+
+    // Show edit mode
+
+    waterInfoEdit.style.display = "block";
+
+  });
+
+}
+
+
+// ======================================================
+// CANCEL EDIT
+// ======================================================
+
+if (cancelWaterInfoBtn) {
+
+  cancelWaterInfoBtn.addEventListener("click", () => {
+
+    waterInfoEdit.style.display = "none";
+
+    waterInfoView.style.display = "block";
+
+  });
+
+}
+
+
+// ======================================================
+// SAVE WATER INFO
+// ======================================================
+
+if (saveWaterInfoBtn) {
+
+  saveWaterInfoBtn.addEventListener("click", () => {
+
+    const systemName =
+      document.getElementById(
+        "systemNameInput"
+      ).value.trim();
+
+
+    const waterType =
+      document.getElementById(
+        "waterTypeInput"
+      ).value.trim();
+
+
+    const monitoring =
+      document.getElementById(
+        "monitoringInput"
+      ).value.trim();
+
+
+    // Check empty fields
+
+    if (
+      !systemName ||
+      !waterType ||
+      !monitoring
+    ) {
+
+      alert(
+        "Please fill all Water Tank Information fields."
+      );
+
+      return;
+
+    }
+
+
+    // Update displayed values
+
+    document.getElementById(
+      "systemNameDisplay"
+    ).textContent = systemName;
+
+
+    document.getElementById(
+      "waterTypeDisplay"
+    ).textContent = waterType;
+
+
+    document.getElementById(
+      "monitoringDisplay"
+    ).textContent = monitoring;
+
+
+    // Return to view mode
+
+    waterInfoEdit.style.display = "none";
+
+    waterInfoView.style.display = "block";
+
+
+    console.log(
+      "✅ Water Tank Information updated successfully."
+    );
+
+  });
+
+}

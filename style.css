@@ -948,3 +948,419 @@ footer{
 
     margin-top: 18px;
 }
+
+/* ======================================================
+   PREDICTION PAGE
+   ====================================================== */
+
+.prediction-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.prediction-top h3 {
+  margin-bottom: 5px;
+}
+
+.prediction-subtitle {
+  margin: 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.prediction-top select {
+  padding: 10px 14px;
+  border: 1px solid #d5dde5;
+  border-radius: 8px;
+  background: white;
+  font-size: 15px;
+  color: #526273;
+}
+
+
+.prediction-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 2px;
+}
+
+
+.prediction-card {
+  min-height: 120px;
+}
+
+
+.prediction-card > span {
+  display: block;
+  color: #718096;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+
+.prediction-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+
+.prediction-value strong {
+  font-size: 32px;
+  color: #1f3447;
+}
+
+
+.prediction-value small {
+  font-size: 14px;
+  color: #718096;
+}
+
+
+.prediction-card p {
+  margin-top: 8px;
+  margin-bottom: 0;
+  color: #718096;
+  font-size: 13px;
+}
+
+
+.prediction-chart-card {
+  margin-top: 0;
+  min-height: 390px;
+}
+
+
+.prediction-chart-card canvas {
+  width: 100% !important;
+  height: 320px !important;
+}
+
+
+@media (max-width: 900px) {
+
+  .prediction-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .prediction-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .prediction-cards {
+    grid-template-columns: 1fr;
+  }
+
+}
+/* ==================================================
+   PREDICTION PAGE SPACING
+   ================================================== */
+
+.prediction-top {
+  margin-bottom: 22px;
+}
+
+.prediction-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.prediction-card {
+  min-height: 140px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.prediction-chart-card {
+  margin-top: 20px;
+  margin-bottom: 24px;
+  padding: 20px;
+}
+
+.prediction-chart-card canvas {
+  width: 100% !important;
+  height: 320px !important;
+}
+
+
+/* ==================================================
+   RESPONSIVE
+   ================================================== */
+
+@media (max-width: 1000px) {
+
+  .prediction-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .prediction-cards {
+    grid-template-columns: 1fr;
+  }
+
+}
+/* ==========================================
+   WATER TANK INFO CARD
+   ========================================== */
+
+#settings .two-col > .card:last-child {
+  padding: 28px 32px;
+}
+
+#settings .two-col > .card:last-child h3 {
+  font-size: 20px;
+  margin-bottom: 28px;
+}
+
+#settings .two-col > .card:last-child p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+  color: #5f7183;
+}
+
+#settings .two-col > .card:last-child p b {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: #172b3a;
+}
+/* =========================================
+   USER PROFILE CARD - CLEAN FORMAT
+   ========================================= */
+
+#settings .profile-card {
+  padding: 32px;
+  text-align: center;
+
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+}
+
+
+/* User Profile heading */
+#settings .profile-card .profile-title {
+  font-size: 20px;
+  font-weight: 600;
+
+  color: #172b3a;
+
+  margin: 0 0 24px;
+}
+
+
+/* Profile avatar */
+#settings .profile-card .avatar {
+  width: 100px;
+  height: 100px;
+
+  margin: 0 0 22px;
+
+  border-radius: 50%;
+
+  background: #e2f7fa;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 48px;
+}
+
+
+/* User name */
+#settings .profile-card #profileUserName {
+  font-size: 20px;
+  font-weight: 600;
+
+  color: #172b3a;
+
+  margin: 0 0 12px;
+}
+
+
+/* User email */
+#settings .profile-card #profileUserEmail {
+  font-size: 20px;
+  font-weight: 400;
+
+  color: #5f7183;
+
+  margin: 0;
+
+  line-height: 1.5;
+}
+
+/* ==================================================
+   WATER TANK INFO
+   ================================================== */
+
+#settings .water-info-card {
+  padding: 28px 32px;
+}
+
+
+/* Header */
+
+#settings .water-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+
+#settings .water-info-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #172b3a;
+}
+
+
+/* Edit button */
+
+#settings .water-edit-btn {
+  border: 1px solid #20a8b8;
+  background: #ffffff;
+  color: #1599aa;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+
+#settings .water-edit-btn:hover {
+  background: #e8f8fa;
+}
+
+
+/* Information rows */
+
+#settings .info-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #e5edf2;
+}
+
+
+#settings .info-item:last-child {
+  border-bottom: none;
+}
+
+
+#settings .info-item span {
+  display: block;
+  font-size: 15px;
+  color: #6b7d8d;
+  margin-bottom: 7px;
+}
+
+
+#settings .info-item strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  color: #172b3a;
+  line-height: 1.5;
+}
+
+
+/* ==================================================
+   WATER TANK EDIT MODE
+   ================================================== */
+
+#settings .edit-field {
+  margin-bottom: 18px;
+}
+
+
+#settings .edit-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #526779;
+  margin-bottom: 7px;
+}
+
+
+#settings .edit-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  border: 1px solid #ccd9e2;
+  border-radius: 7px;
+  font-size: 15px;
+  color: #172b3a;
+  outline: none;
+}
+
+
+#settings .edit-field input:focus {
+  border-color: #20a8b8;
+  box-shadow: 0 0 0 2px rgba(32, 168, 184, 0.12);
+}
+
+
+/* Edit buttons */
+
+#settings .water-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+
+#settings .water-cancel-btn {
+  padding: 10px 18px;
+  border: 1px solid #ccd9e2;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #526779;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+
+#settings .water-save-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 7px;
+  background: #20a8b8;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+#settings .water-save-btn:hover {
+  background: #168f9e;
+}

@@ -58,8 +58,6 @@
 <!-- =============== END LOGIN SCREEN =============== -->
 
 
-
-
 <!-- ================= PUSH NOTIFICATION ================= -->
 
 <button
@@ -211,6 +209,19 @@
 
 
         </div>
+
+        <!-- WATER LEVEL -->
+<div class="metric-card">
+
+  <span>💧</span>
+
+  <small>Water Level</small>
+
+  <strong id="waterLevelValue">0</strong>
+
+  <em>%</em>
+
+</div>
 
       <!-- SCORE + RISK -->
 
@@ -388,25 +399,6 @@
 
     <section id="controls" class="page">
 
-      <div class="toolbar">
-
-        <span></span>
-
-        <select id="controlMode">
-
-          <option value="manual">
-            Manual Mode
-          </option>
-
-          <option value="automatic">
-            Automatic Mode
-          </option>
-
-        </select>
-
-      </div>
-
-
       <!-- FEED -->
 
       <div class="control-card card">
@@ -518,191 +510,168 @@
 
       </div>
 
-
-      <!-- SCHEDULE -->
-
-<div class="card schedules">
-
-  <h3>Schedule Settings</h3>
-
-  <div>
-    <b>Auto Feed</b>
-    <p>
-      Every 12 Hours<br>
-      Next: Today, 08:00 PM
-    </p>
-    <button>Edit</button>
-  </div>
-
-  <div>
-    <b>Auto Pump</b>
-    <p>
-      Every Day - 2 Hours<br>
-      Next: Tomorrow, 09:00 AM
-    </p>
-    <button>Edit</button>
-  </div>
-
-  <div>
-    <b>Auto Cooler</b>
-    <p>
-      Every Day - 4 Hours<br>
-      Next: Tomorrow, 12:00 PM
-    </p>
-    <button id="editCoolerSchedule">Edit</button>
-  </div>
-
-</div>
 </section>
 
 
-    <!-- ================= PREDICTION ================= -->
+    <!-- ======================================================
+     PREDICTION PAGE
+     ====================================================== -->
 
-    <section id="prediction" class="page">
+<section id="prediction" class="page">
 
-      <div class="toolbar">
+  <div class="prediction-top">
 
-        <span></span>
+    <div>
+      <h3>Predicted Water Quality</h3>
+      <p class="prediction-subtitle">
+        Based on recent sensor history
+      </p>
+    </div>
 
-        <select>
-
-          <option>
-            Next 24 Hours
-          </option>
-
-          <option>
-            Next 7 Days
-          </option>
-
-        </select>
-
-      </div>
+  </div>
 
 
-      <h3>
-        Predicted Water Quality
-      </h3>
+  <!-- ==================================================
+       PREDICTION CARDS
+       ================================================== -->
+
+  <div class="prediction-cards">
 
 
-      <div class="metric-grid">
+    <!-- TEMPERATURE -->
 
-        <div class="metric-card">
+    <div class="card prediction-card">
 
-          <small>
-            Temperature
-          </small>
+      <span>Temperature</span>
 
-          <strong>
-            27.1
-          </strong>
+      <div class="prediction-value">
 
-          <em>
-            °C
-          </em>
+        <strong id="predictedTemperature">
+          --
+        </strong>
 
-          <label class="warning">
-            ↑ 0.6 °C
-          </label>
-
-        </div>
-
-
-        <div class="metric-card">
-
-          <small>
-            TDS
-          </small>
-
-          <strong>
-            360
-          </strong>
-
-          <em>
-            ppm
-          </em>
-
-          <label class="warning">
-            ↑ 10 ppm
-          </label>
-
-        </div>
-
-
-        <div class="metric-card">
-
-          <small>
-            Turbidity
-          </small>
-
-          <strong>
-            35
-          </strong>
-
-          <em>
-            NTU
-          </em>
-
-          <label class="warning">
-            ↑ 4 NTU
-          </label>
-
-        </div>
-
-
-        <div class="metric-card">
-
-          <small>
-            Risk Level
-          </small>
-
-          <strong class="orange">
-            MODERATE
-          </strong>
-
-          <label class="warning">
-            (Increasing)
-          </label>
-
-        </div>
+        <small>°C</small>
 
       </div>
 
+      <p id="temperaturePredictionChange">
+        Waiting for sensor history...
+      </p>
 
-      <div class="card chart-card">
-
-        <h3>
-          Prediction Trend
-        </h3>
-
-        <canvas id="predictionChart"></canvas>
-
-      </div>
+    </div>
 
 
-      <div class="recommendation card">
+    <!-- TDS -->
 
-        <span>
-          🤖
-        </span>
+    <div class="card prediction-card">
 
-        <div>
+      <span>TDS</span>
 
-          <b>
-            AI Recommendation
-          </b>
+      <div class="prediction-value">
 
-          <p>
-            TDS and turbidity trends are being monitored.
-            Check the filter if values continuously increase.
-          </p>
+        <strong id="predictedTds">
+          --
+        </strong>
 
-        </div>
+        <small>ppm</small>
 
       </div>
 
-    </section>
+      <p id="tdsPredictionChange">
+        Waiting for sensor history...
+      </p>
+
+    </div>
 
 
+    <!-- TURBIDITY -->
+
+    <div class="card prediction-card">
+
+      <span>Turbidity</span>
+
+      <div class="prediction-value">
+
+        <strong id="predictedTurbidity">
+          --
+        </strong>
+
+        <small>NTU</small>
+
+      </div>
+
+      <p id="turbidityPredictionChange">
+        Waiting for sensor history...
+      </p>
+
+    </div>
+
+
+    <!-- RISK -->
+
+    <div class="card prediction-card">
+
+      <span>Risk Level</span>
+
+      <div class="prediction-value">
+
+        <strong id="predictedRisk">
+          --
+        </strong>
+
+      </div>
+
+      <p id="predictionRiskTrend">
+        Waiting for prediction...
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- ==================================================
+       PREDICTION GRAPH
+       ================================================== -->
+
+  <!-- ==================================================
+     TEMPERATURE PREDICTION GRAPH
+     ================================================== -->
+
+<!-- TEMPERATURE PREDICTION GRAPH -->
+
+<div class="card chart-card prediction-chart-card">
+
+  <h3>Temperature Prediction Trend</h3>
+
+  <canvas id="temperaturePredictionChart"></canvas>
+
+</div>
+
+
+<!-- TDS PREDICTION GRAPH -->
+
+<div class="card chart-card prediction-chart-card">
+
+  <h3>TDS Prediction Trend</h3>
+
+  <canvas id="tdsPredictionChart"></canvas>
+
+</div>
+
+
+<!-- TURBIDITY PREDICTION GRAPH -->
+
+<div class="card chart-card prediction-chart-card">
+
+  <h3>Turbidity Prediction Trend</h3>
+
+  <canvas id="turbidityPredictionChart"></canvas>
+
+</div>
+
+
+</section>
 
     <!-- ================= ALERTS ================= -->
 
@@ -747,123 +716,228 @@
     </section>
 
 
-
     <!-- ================= SETTINGS ================= -->
 
     <section id="settings" class="page">
-
-      <div class="tabs">
-
-        <button class="tab active">
-          Profile
-        </button>
-
-        <button class="tab">
-          Thresholds
-        </button>
-
-        <button class="tab">
-          Notifications
-        </button>
-
-        <button class="tab">
-          System
-        </button>
-
-      </div>
 
 
       <div class="two-col">
 
         <div class="card profile-card">
-
-          <h3>
+          
+          <h3 class="profile-title">
             User Profile
           </h3>
-
           <div class="avatar">
             🐠
           </div>
-
-          <h3>
-            AquaSense User
-          </h3>
-
-          <p>
-            aquasense@example.com
+          <h2 id="profileUserName">
+            User
+          </h2>
+          <p id="profileUserEmail">
+            ---
           </p>
-
-          <button>
-            Edit Profile
-          </button>
-
         </div>
 
+        <!-- ================= WATER TANK INFO ================= -->
 
-        <div class="card">
+<div class="card water-info-card">
 
-          <h3>
-            Water Tank Info
-          </h3>
+  <div class="water-info-header">
 
-          <p>
-            System Name<br>
-            <b>AquaSense</b>
-          </p>
+    <h3>Water Tank Info</h3>
 
-          <p>
-            Water Type<br>
-            <b>Drinking Water</b>
-          </p>
+    <button
+      type="button"
+      class="water-edit-btn"
+      id="editWaterInfoBtn"
+    >
+      Edit
+    </button>
 
-          <p>
-            Monitoring<br>
-            <b>Temperature, TDS, Turbidity</b>
-          </p>
+  </div>
 
-        </div>
+
+  <!-- VIEW MODE -->
+
+  <div id="waterInfoView">
+
+    <div class="info-item">
+
+      <span>System Name</span>
+
+      <strong id="systemNameDisplay">
+        AquaSense
+      </strong>
+
+    </div>
+
+
+    <div class="info-item">
+
+      <span>Water Type</span>
+
+      <strong id="waterTypeDisplay">
+        Drinking Water
+      </strong>
+
+    </div>
+
+
+    <div class="info-item">
+
+      <span>Monitoring</span>
+
+      <strong id="monitoringDisplay">
+        Temperature, TDS, Turbidity
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- EDIT MODE -->
+
+  <div
+    id="waterInfoEdit"
+    style="display: none;"
+  >
+
+    <div class="edit-field">
+
+      <label for="systemNameInput">
+        System Name
+      </label>
+
+      <input
+        type="text"
+        id="systemNameInput"
+        value="AquaSense"
+      >
+
+    </div>
+
+
+    <div class="edit-field">
+
+      <label for="waterTypeInput">
+        Water Type
+      </label>
+
+      <input
+        type="text"
+        id="waterTypeInput"
+        value="Drinking Water"
+      >
+
+    </div>
+
+
+    <div class="edit-field">
+
+      <label for="monitoringInput">
+        Monitoring
+      </label>
+
+      <input
+        type="text"
+        id="monitoringInput"
+        value="Temperature, TDS, Turbidity"
+      >
+
+    </div>
+
+
+    <div class="water-edit-actions">
+
+      <button
+        type="button"
+        class="water-cancel-btn"
+        id="cancelWaterInfoBtn"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="water-save-btn"
+        id="saveWaterInfoBtn"
+      >
+        Save
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
       </div>
 
 
       <!-- THRESHOLDS -->
 
-      <div class="card thresholds">
+      <!-- ================= THRESHOLD SETTINGS ================= -->
 
-        <h3>
-          Threshold Settings
-        </h3>
+<div class="card thresholds">
 
+  <h3>Threshold Settings</h3>
 
-        <label>
-          Max Temperature
-          <input id="maxTemperature" value="30">
-        </label>
+  <label>
+    Max Temperature (°C)
 
-
-        <label>
-          Min TDS
-          <input id="minTds" value="300">
-        </label>
-
-
-        <label>
-          Max TDS
-          <input id="maxTds" value="500">
-        </label>
+    <input
+      type="number"
+      id="maxTemperature"
+      value="30"
+      min="0"
+      max="100"
+      step="0.1"
+      placeholder="Enter maximum temperature"
+    >
+  </label>
 
 
-        <label>
-          Max Turbidity
-          <input id="maxTurbidity" value="50">
-        </label>
+  <label>
+    Max TDS (ppm)
+
+    <input
+      type="number"
+      id="maxTds"
+      value="500"
+      min="0"
+      max="5000"
+      step="1"
+      placeholder="Enter maximum TDS"
+    >
+  </label>
 
 
-        <button class="primary" id="saveThresholds">
-          Save Changes
-        </button>
+  <label>
+    Max Turbidity (NTU)
 
-      </div>
+    <input
+      type="number"
+      id="maxTurbidity"
+      value="50"
+      min="0"
+      max="1000"
+      step="1"
+      placeholder="Enter maximum turbidity"
+    >
+  </label>
+
+
+  <button
+    type="button"
+    class="primary"
+    id="saveThresholds"
+  >
+    Save Changes
+  </button>
+
+</div>
 
     </section>
 
