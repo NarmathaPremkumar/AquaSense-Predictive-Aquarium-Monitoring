@@ -270,6 +270,17 @@ if (scoreElement) {
     scoreElement.textContent = waterQualityScore;
 }
 
+const gauge = document.querySelector(".gauge");
+
+if (gauge && Number.isFinite(waterQualityScore)) {
+    const score = Math.max(
+        0,
+        Math.min(100, waterQualityScore)
+    );
+
+    gauge.style.setProperty("--score", score);
+}
+
 // DETERMINE RISK LEVEL
 let riskLevel;
 
@@ -3556,138 +3567,83 @@ function loadPredictionHistory() {
 // TREND PREDICTION
 // ======================================================
 
-function calculateTrendPrediction(
-  history,
-  valueKey,
-  hoursAhead
-) {
 
-  if (
-    !history ||
-    history.length < 2
-  ) {
-
+function calculateTrendPrediction(history, valueKey, hoursAhead) {
+  if (!Array.isArray(history) || history.length < 3) {
     return null;
-
   }
 
-
-  const points =
-    history.slice(-20);
-
-
-  const firstTimestamp =
-    points[0].timestamp;
-
-
-  const x =
-    points.map(
-      (item) =>
-        (
-          item.timestamp -
-          firstTimestamp
-        ) /
-        (1000 * 60 * 60)
+  const points = history
+    .slice(-20)
+    .filter(item =>
+      Number.isFinite(Number(item.timestamp)) &&
+      Number.isFinite(Number(item[valueKey]))
     );
 
-
-  const y =
-    points.map(
-      (item) =>
-        Number(item[valueKey])
-    );
-
-
-  const n = x.length;
-
-
-  const sumX =
-    x.reduce(
-      (sum, value) =>
-        sum + value,
-      0
-    );
-
-
-  const sumY =
-    y.reduce(
-      (sum, value) =>
-        sum + value,
-      0
-    );
-
-
-  const sumXY =
-    x.reduce(
-      (sum, value, index) =>
-        sum +
-        value *
-        y[index],
-      0
-    );
-
-
-  const sumXX =
-    x.reduce(
-      (sum, value) =>
-        sum +
-        value * value,
-      0
-    );
-
-
-  const denominator =
-    (
-      n * sumXX
-    ) -
-    (
-      sumX * sumX
-    );
-
-
-  if (
-    denominator === 0
-  ) {
-
-    return y[y.length - 1];
-
+  if (points.length < 3) {
+    return null;
   }
 
+  const latest = points[points.length - 1];
+  const latestValue = Number(latest[valueKey]);
 
-  const slope =
-    (
-      (n * sumXY) -
-      (sumX * sumY)
-    ) /
-    denominator;
+  // Estimate the trend from recent valid readings
+  const firstTimestamp = Number(points[0].timestamp);
 
+  const x = points.map(item =>
+    (Number(item.timestamp) - firstTimestamp) / 3600000
+  );
 
-  const intercept =
-    (
-      sumY -
-      slope * sumX
-    ) /
-    n;
+  const y = points.map(item => Number(item[valueKey]));
+  const n = points.length;
 
+  const meanX = x.reduce((sum, value) => sum + value, 0) / n;
+  const meanY = y.reduce((sum, value) => sum + value, 0) / n;
 
-  const latestX =
-    x[x.length - 1];
+  let numerator = 0;
+  let denominator = 0;
 
+  for (let i = 0; i < n; i++) {
+    numerator += (x[i] - meanX) * (y[i] - meanY);
+    denominator += (x[i] - meanX) ** 2;
+  }
 
-  const futureX =
-    latestX +
-    hoursAhead;
+  // If timestamps are identical, use the latest reading
+  if (denominator === 0) {
+    return latestValue;
+  }
 
+  const slope = numerator / denominator;
+  const rawChange = slope * Math.max(0, Number(hoursAhead) || 24);
+
+  // Temporary maximum changes over the full 24-hour forecast.
+  // These values must be validated against your sensors and aquarium.
+  const maxChange = {
+    temperature: 3,
+    tds: 100,
+    turbidity: 10
+  }[valueKey];
+
+  if (maxChange === undefined || !Number.isFinite(rawChange)) {
+    return latestValue;
+  }
+
+  // Limit the trend over 24 hours, then scale it by forecast time.
+  const limited24HourChange = Math.max(
+    -maxChange,
+    Math.min(maxChange, slope * 24)
+  );
+
+  const forecastHours = Math.min(
+    24,
+    Math.max(0, Number(hoursAhead) || 0)
+  );
 
   const prediction =
-    intercept +
-    slope * futureX;
+    latestValue + limited24HourChange * (forecastHours / 24);
 
-
-  return prediction;
-
+  return Math.max(0, prediction);
 }
-
 
 // ======================================================
 // GENERATE PREDICTION
@@ -3718,28 +3674,30 @@ function generatePrediction() {
   // +24 HOUR PREDICTIONS
   // ====================================================
 
-  let predictedTemperature =
-    calculateTrendPrediction(
-      history,
-      "temperature",
-      24
-    );
+  
+let predictedTemperature =
+  calculateTrendPrediction(history, "temperature", 24);
 
+let predictedTds =
+  calculateTrendPrediction(history, "tds", 24);
 
-  let predictedTds =
-    calculateTrendPrediction(
-      history,
-      "tds",
-      24
-    );
+let predictedTurbidity =
+  calculateTrendPrediction(history, "turbidity", 24);
 
+// Clamp only valid predictions; don't turn null into zero
+if (predictedTemperature !== null) {
+  predictedTemperature = Math.max(0, predictedTemperature);
+  predictedTemperature = Number(predictedTemperature.toFixed(1));
+}
 
-  let predictedTurbidity =
-    calculateTrendPrediction(
-      history,
-      "turbidity",
-      24
-    );
+if (predictedTds !== null) {
+  predictedTds = Math.round(Math.max(0, predictedTds));
+}
+
+if (predictedTurbidity !== null) {
+  predictedTurbidity = Math.round(Math.max(0, predictedTurbidity));
+}
+
 
 
   // ====================================================
@@ -3820,18 +3778,11 @@ function generatePrediction() {
 
 
   if (tdsElement) {
-
-    tdsElement.textContent =
-      predictedTds;
-
+  tdsElement.textContent = predictedTds ?? "--";
   }
 
-
   if (turbidityElement) {
-
-    turbidityElement.textContent =
-      predictedTurbidity;
-
+  turbidityElement.textContent = predictedTurbidity ?? "--";
   }
 
 
@@ -3913,18 +3864,44 @@ function generatePrediction() {
   // ====================================================
 
   const predictedRiskElement =
-    document.getElementById("predictedRisk");
+  document.getElementById("predictedRisk");
 
+const riskTrendElement =
+  document.getElementById("predictionRiskTrend");
+
+// Use the latest water quality score from sensor data.
+// This score must be available in the sensor history.
+const latestScore = Number(latest.waterQualityScore);
+
+if (Number.isFinite(latestScore)) {
+  let riskLevel;
+
+  if (latestScore > 70) {
+    riskLevel = "LOW";
+  } else if (latestScore > 50) {
+    riskLevel = "MEDIUM";
+  } else {
+    riskLevel = "HIGH";
+  }
+
+  if (predictedRiskElement) {
+    predictedRiskElement.textContent = riskLevel;
+  }
+
+  if (riskTrendElement) {
+    riskTrendElement.textContent =
+      `Based on latest water quality score: ${latestScore}/100`;
+  }
+} else {
   if (predictedRiskElement) {
     predictedRiskElement.textContent = "--";
   }
 
-  const riskTrendElement =
-    document.getElementById("predictionRiskTrend");
-
   if (riskTrendElement) {
-    riskTrendElement.textContent = "";
+    riskTrendElement.textContent =
+      "Water quality score unavailable";
   }
+}
 
   // ====================================================
   // CREATE PREDICTION GRAPH
@@ -3997,21 +3974,14 @@ let tdsPredictionChart = null;
 let turbidityPredictionChart = null;
 
 
-function createPredictionChart(history) {
 
+function createPredictionChart(history) {
   if (!history || history.length < 5) {
     console.log("Not enough SensorHistory data.");
     return;
   }
 
-
-  // ====================================================
-  // LAST 5 SENSOR HISTORY VALUES
-  // ====================================================
-
-  const recentHistory =
-    history.slice(-5);
-
+  const recentHistory = history.slice(-5);
 
   const labels = [
     "History 1",
@@ -4025,444 +3995,126 @@ function createPredictionChart(history) {
     "+24 Hours"
   ];
 
-
-  // ====================================================
-  // TEMPERATURE
-  // ====================================================
-
-  const temperatureHistory =
-    recentHistory.map(
-      item => Number(item.temperature)
+  function safePrediction(valueKey, hoursAhead, decimals = 0) {
+    const value = calculateTrendPrediction(
+      history,
+      valueKey,
+      hoursAhead
     );
 
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+
+    return Number(value.toFixed(decimals));
+  }
+
+  const temperatureHistory = recentHistory.map(
+    item => Number(item.temperature)
+  );
+
+  const tdsHistory = recentHistory.map(
+    item => Number(item.tds)
+  );
+
+  const turbidityHistory = recentHistory.map(
+    item => Number(item.turbidity)
+  );
+
+  const hours = [6, 12, 18, 24];
 
   const temperaturePrediction = [
-
     temperatureHistory[4],
-
-    calculateTrendPrediction(
-      history,
-      "temperature",
-      6
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "temperature",
-      12
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "temperature",
-      18
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "temperature",
-      24
-    )
-
-  ].map(
-    value =>
-      Number(
-        Math.max(0, value).toFixed(1)
-      )
-  );
-
-
-  // ====================================================
-  // TDS
-  // ====================================================
-
-  const tdsHistory =
-    recentHistory.map(
-      item => Number(item.tds)
-    );
-
+    ...hours.map(h => safePrediction("temperature", h, 1))
+  ];
 
   const tdsPrediction = [
-
     tdsHistory[4],
-
-    calculateTrendPrediction(
-      history,
-      "tds",
-      6
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "tds",
-      12
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "tds",
-      18
-    ),
-
-    calculateTrendPrediction(
-      history,
-      "tds",
-      24
-    )
-
-  ].map(
-    value =>
-      Math.round(
-        Math.max(0, value)
-      )
-  );
-
-
-  // ====================================================
-  // TURBIDITY
-  // ====================================================
-
-  const turbidityHistory =
-    recentHistory.map(
-      item => Number(item.turbidity)
-    );
-
+    ...hours.map(h => safePrediction("tds", h))
+  ];
 
   const turbidityPrediction = [
-
     turbidityHistory[4],
+    ...hours.map(h => safePrediction("turbidity", h))
+  ];
 
-    calculateTrendPrediction(
-      history,
-      "turbidity",
-      6
-    ),
+  function drawChart(canvasId, chartVariable, label, historyValues, predictions) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return chartVariable;
 
-    calculateTrendPrediction(
-      history,
-      "turbidity",
-      12
-    ),
+    if (chartVariable) {
+      chartVariable.destroy();
+    }
 
-    calculateTrendPrediction(
-      history,
-      "turbidity",
-      18
-    ),
+    return new Chart(canvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Sensor History",
+            data: [
+              historyValues[0],
+              historyValues[1],
+              historyValues[2],
+              historyValues[3],
+              historyValues[4],
+              null, null, null, null
+            ],
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label,
+            data: [
+              null, null, null, null,
+              predictions[0],
+              predictions[1],
+              predictions[2],
+              predictions[3],
+              predictions[4]
+            ],
+            tension: 0.3,
+            borderDash: [6, 6],
+            spanGaps: false,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
 
-    calculateTrendPrediction(
-      history,
-      "turbidity",
-      24
-    )
-
-  ].map(
-    value =>
-      Math.round(
-        Math.max(0, value)
-      )
+  temperaturePredictionChart = drawChart(
+    "temperaturePredictionChart",
+    temperaturePredictionChart,
+    "Predicted Temperature (°C)",
+    temperatureHistory,
+    temperaturePrediction
   );
 
-
-  // ====================================================
-  // TEMPERATURE GRAPH
-  // ====================================================
-
-  const temperatureCanvas =
-    document.getElementById(
-      "temperaturePredictionChart"
-    );
-
-
-  if (temperatureCanvas) {
-
-    if (temperaturePredictionChart) {
-      temperaturePredictionChart.destroy();
-    }
-
-
-    temperaturePredictionChart =
-      new Chart(
-        temperatureCanvas,
-        {
-
-          type: "line",
-
-          data: {
-
-            labels: labels,
-
-            datasets: [
-
-              {
-                label: "Sensor History",
-
-                data: [
-
-                  temperatureHistory[0],
-                  temperatureHistory[1],
-                  temperatureHistory[2],
-                  temperatureHistory[3],
-                  temperatureHistory[4],
-
-                  null,
-                  null,
-                  null,
-                  null
-
-                ],
-
-                tension: 0.3,
-
-                fill: false
-              },
-
-
-              {
-                label:
-                  "Predicted Temperature (°C)",
-
-                data: [
-
-                  null,
-                  null,
-                  null,
-                  null,
-
-                  temperaturePrediction[0],
-                  temperaturePrediction[1],
-                  temperaturePrediction[2],
-                  temperaturePrediction[3],
-                  temperaturePrediction[4]
-
-                ],
-
-                tension: 0.3,
-
-                borderDash: [6, 6],
-
-                fill: false
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false
-
-          }
-
-        }
-      );
-
-  }
-
-
-  // ====================================================
-  // TDS GRAPH
-  // ====================================================
-
-  const tdsCanvas =
-    document.getElementById(
-      "tdsPredictionChart"
-    );
-
-
-  if (tdsCanvas) {
-
-    if (tdsPredictionChart) {
-      tdsPredictionChart.destroy();
-    }
-
-
-    tdsPredictionChart =
-      new Chart(
-        tdsCanvas,
-        {
-
-          type: "line",
-
-          data: {
-
-            labels: labels,
-
-            datasets: [
-
-              {
-                label: "Sensor History",
-
-                data: [
-
-                  tdsHistory[0],
-                  tdsHistory[1],
-                  tdsHistory[2],
-                  tdsHistory[3],
-                  tdsHistory[4],
-
-                  null,
-                  null,
-                  null,
-                  null
-
-                ],
-
-                tension: 0.3,
-
-                fill: false
-              },
-
-
-              {
-                label:
-                  "Predicted TDS (ppm)",
-
-                data: [
-
-                  null,
-                  null,
-                  null,
-                  null,
-
-                  tdsPrediction[0],
-                  tdsPrediction[1],
-                  tdsPrediction[2],
-                  tdsPrediction[3],
-                  tdsPrediction[4]
-
-                ],
-
-                tension: 0.3,
-
-                borderDash: [6, 6],
-
-                fill: false
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false
-
-          }
-
-        }
-      );
-
-  }
-
-
-  // ====================================================
-  // TURBIDITY GRAPH
-  // ====================================================
-
-  const turbidityCanvas =
-    document.getElementById(
-      "turbidityPredictionChart"
-    );
-
-
-  if (turbidityCanvas) {
-
-    if (turbidityPredictionChart) {
-      turbidityPredictionChart.destroy();
-    }
-
-
-    turbidityPredictionChart =
-      new Chart(
-        turbidityCanvas,
-        {
-
-          type: "line",
-
-          data: {
-
-            labels: labels,
-
-            datasets: [
-
-              {
-                label: "Sensor History",
-
-                data: [
-
-                  turbidityHistory[0],
-                  turbidityHistory[1],
-                  turbidityHistory[2],
-                  turbidityHistory[3],
-                  turbidityHistory[4],
-
-                  null,
-                  null,
-                  null,
-                  null
-
-                ],
-
-                tension: 0.3,
-
-                fill: false
-              },
-
-
-              {
-                label:
-                  "Predicted Turbidity (NTU)",
-
-                data: [
-
-                  null,
-                  null,
-                  null,
-                  null,
-
-                  turbidityPrediction[0],
-                  turbidityPrediction[1],
-                  turbidityPrediction[2],
-                  turbidityPrediction[3],
-                  turbidityPrediction[4]
-
-                ],
-
-                tension: 0.3,
-
-                borderDash: [6, 6],
-
-                fill: false
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false
-
-          }
-
-        }
-      );
-
-  }
-
-
-  console.log(
-    "✅ Prediction graphs created from SensorHistory."
+  tdsPredictionChart = drawChart(
+    "tdsPredictionChart",
+    tdsPredictionChart,
+    "Predicted TDS (ppm)",
+    tdsHistory,
+    tdsPrediction
   );
 
+  turbidityPredictionChart = drawChart(
+    "turbidityPredictionChart",
+    turbidityPredictionChart,
+    "Predicted Turbidity (NTU)",
+    turbidityHistory,
+    turbidityPrediction
+  );
+
+  console.log("Prediction graphs updated using validated values.");
 }
+
 
 
 // ======================================================

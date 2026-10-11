@@ -223,18 +223,37 @@ h3{
   text-align:center
 }
 
-.gauge{
-  width:145px;
-  height:145px;
-  border-radius:50%;
-  margin:10px auto;
-  border:14px solid #dceee5;
-  border-top-color:#50d46d;
-  border-right-color:#50d46d;
-  display:flex;
-  align-items:center;
-  justify-content:center
+
+.gauge {
+  width: 181px;
+  height: 181px;
+  border-radius: 50%;
+  margin: 10px auto;
+  background: conic-gradient(
+    #50d46d calc(var(--score, 89) * 1%),
+    #dceee5 0
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: none;
+  flex-shrink: 0;
 }
+
+.gauge::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.gauge > div {
+  position: relative;
+  z-index: 1;
+}
+
 
 .gauge strong{
   font-size:35px;
@@ -1072,7 +1091,7 @@ footer{
 
 .prediction-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-top: 20px;
   margin-bottom: 24px;
@@ -1367,4 +1386,31 @@ footer{
 #refillPumpSystemStatus {
   color: #16a34a;
   font-weight: 600;
+}
+
+/* Prediction page layout: three cards, charts below */
+#prediction .prediction-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+#prediction .prediction-chart-card {
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+  #prediction .prediction-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  #prediction .prediction-cards {
+    grid-template-columns: 1fr;
+  }
 }
