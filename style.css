@@ -1364,3 +1364,7 @@ footer{
 #settings .water-save-btn:hover {
   background: #168f9e;
 }
+#refillPumpSystemStatus {
+  color: #16a34a;
+  font-weight: 600;
+}

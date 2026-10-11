@@ -1959,81 +1959,82 @@ function updateDeviceStatus(device, state) {
     );
   }
 
+// ======================================================
+// REFILL PUMP CONTROL
+// ======================================================
 
-  // ======================================================
-  // LIGHT CONTROL
-  // ======================================================
+const lightOnButton =
+  document.getElementById("lightOn");
 
-  const lightOnButton =
-    document.getElementById(
-      "lightOn"
-    );
+const lightOffButton =
+  document.getElementById("lightOff");
 
-  const lightOffButton =
-    document.getElementById(
-      "lightOff"
-    );
+const refillPumpRef =
+  ref(rtdb, "AquaSmart/ActuatorStatus/Refill Pump");
 
 
-  async function setLightState(state) {
+// Send ON/OFF command to Firebase
+async function setRefillPumpState(state) {
+  try {
+    const command = state ? "1" : "0";
 
-    try {
+    await set(refillPumpRef, command);
 
-      const lightRef =
-        ref(
-          rtdb,
-          "AquaSmart/ActuatorStatus/Refill Pump"
-        );
+    console.log("Refill Pump command sent:", command);
 
-      const command =
-        state ? "1" : "0";
-
-
-      await set(
-        lightRef,
-        command
-      );
+  } catch (error) {
+    console.error("Refill Pump update error:", error);
+    alert("Unable to update Refill Pump.");
+  }
+}
 
 
-      updateDeviceStatus("Refill Pump", command);
+// ON button
+if (lightOnButton) {
+  lightOnButton.addEventListener(
+    "click",
+    () => setRefillPumpState(true)
+  );
+}
 
 
-      console.log(
-        "Light command sent:",
-        command
-      );
+// OFF button
+if (lightOffButton) {
+  lightOffButton.addEventListener(
+    "click",
+    () => setRefillPumpState(false)
+  );
+}
 
-    } catch (error) {
 
-      console.error(
-        "Light update error:",
-        error
-      );
+// ======================================================
+// REFILL PUMP STATUS - UPDATE DASHBOARD + CONTROLS
+// ======================================================
 
-      alert(
-        "Unable to update light."
-      );
-    }
+onValue(refillPumpRef, (snapshot) => {
+  const value = snapshot.val();
+
+  const statusText =
+    Number(value) === 1 ? "ON" : "OFF";
+
+  // Update the Dashboard System Status card
+  const dashboardStatus =
+    document.getElementById("refillPumpSystemStatus");
+
+  if (dashboardStatus) {
+    dashboardStatus.textContent = statusText;
   }
 
+  // Update the Controls page status
+  const controlStatus =
+    document.getElementById("lightText");
 
-  if (lightOnButton) {
-
-    lightOnButton.addEventListener(
-      "click",
-      () => setLightState(true)
-    );
+  if (controlStatus) {
+    controlStatus.textContent = statusText;
   }
 
-
-  if (lightOffButton) {
-
-    lightOffButton.addEventListener(
-      "click",
-      () => setLightState(false)
-    );
-  }
-
+  console.log("Refill Pump status received:", statusText);
+});
 
   // ======================================================
   // COOLER CONTROL
@@ -4816,77 +4817,50 @@ if (cancelWaterInfoBtn) {
 }
 
 
-// ======================================================
-// SAVE WATER INFO
-// ======================================================
-
 if (saveWaterInfoBtn) {
-
   saveWaterInfoBtn.addEventListener("click", () => {
+    const systemName = document.getElementById("systemNameInput").value.trim();
+    const waterType = document.getElementById("waterTypeInput").value.trim();
+    const monitoring = document.getElementById("monitoringInput").value.trim();
 
-    const systemName =
-      document.getElementById(
-        "systemNameInput"
-      ).value.trim();
-
-
-    const waterType =
-      document.getElementById(
-        "waterTypeInput"
-      ).value.trim();
-
-
-    const monitoring =
-      document.getElementById(
-        "monitoringInput"
-      ).value.trim();
-
-
-    // Check empty fields
-
-    if (
-      !systemName ||
-      !waterType ||
-      !monitoring
-    ) {
-
-      alert(
-        "Please fill all Water Tank Information fields."
-      );
-
+    if (!systemName || !waterType || !monitoring) {
+      alert("Please fill all Water Tank Information fields.");
       return;
-
     }
 
+    const waterInfo = {
+      systemName,
+      waterType,
+      monitoring
+    };
 
-    // Update displayed values
+    // Save the values in the browser
+    localStorage.setItem("aquaSenseWaterInfo", JSON.stringify(waterInfo));
 
-    document.getElementById(
-      "systemNameDisplay"
-    ).textContent = systemName;
-
-
-    document.getElementById(
-      "waterTypeDisplay"
-    ).textContent = waterType;
-
-
-    document.getElementById(
-      "monitoringDisplay"
-    ).textContent = monitoring;
-
-
-    // Return to view mode
+    // Update the displayed values
+    document.getElementById("systemNameDisplay").textContent = systemName;
+    document.getElementById("waterTypeDisplay").textContent = waterType;
+    document.getElementById("monitoringDisplay").textContent = monitoring;
 
     waterInfoEdit.style.display = "none";
-
     waterInfoView.style.display = "block";
 
-
-    console.log(
-      "✅ Water Tank Information updated successfully."
-    );
-
+    alert("Water Tank Information saved successfully!");
   });
-
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedInfo = localStorage.getItem("aquaSenseWaterInfo");
+
+  if (!savedInfo) return;
+
+  const info = JSON.parse(savedInfo);
+
+  const systemName = document.getElementById("systemNameDisplay");
+  const waterType = document.getElementById("waterTypeDisplay");
+  const monitoring = document.getElementById("monitoringDisplay");
+
+  if (systemName) systemName.textContent = info.systemName;
+  if (waterType) waterType.textContent = info.waterType;
+  if (monitoring) monitoring.textContent = info.monitoring;
+});
