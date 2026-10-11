@@ -260,103 +260,68 @@ await updateRealtimeAlerts(
   turbidity
 );
 
-     // ==================================================
-// CALCULATE WATER QUALITY SCORE
-// ==================================================
+// GET WATER QUALITY SCORE DIRECTLY FROM FIREBASE
+const waterQualityScore = Number(data.waterQualityScore);
 
-const waterQualityScore =
-  calculateWaterQualityScore(
-    tds,
-    turbidity
-  );
+// DISPLAY WATER QUALITY SCORE
+const scoreElement = document.getElementById("scoreValue");
 
-const riskLevel =
-  getRiskLevel(
-    waterQualityScore
-  );
-
-console.log(
-  "💧 Water Quality Score:",
-  waterQualityScore
-);
-
-console.log(
-  "⚠️ Risk Level:",
-  riskLevel
-);
-
-
-// ==================================================
-// DISPLAY RISK LEVEL
-// ==================================================
-
-const riskElement =
-  document.getElementById(
-    "riskValue"
-  );
-
-if (riskElement) {
-
-  riskElement.textContent =
-    riskLevel;
+if (scoreElement) {
+    scoreElement.textContent = waterQualityScore;
 }
 
-      // ==================================================
-      // DISPLAY WATER QUALITY SCORE
-      // ==================================================
+// DETERMINE RISK LEVEL
+let riskLevel;
 
-      const scoreValue =
-        document.getElementById(
-          "scoreValue"
-        );
+if (waterQualityScore > 70) {
+    riskLevel = "LOW";
+} else if (waterQualityScore > 50) {
+    riskLevel = "MEDIUM";
+} else {
+    riskLevel = "HIGH";
+}
 
-      if (scoreValue) {
+// DISPLAY RISK LEVEL
+const riskElement = document.getElementById("riskValue");
 
-        scoreValue.textContent =
-          waterQualityScore;
-      }
+if (riskElement) {
+    riskElement.textContent = riskLevel;
+}
+
+console.log("Firebase Water Quality Score:", waterQualityScore);
+console.log("Risk Level:", riskLevel);
 
 
-      // ==================================================
-      // DISPLAY SCORE STATUS
-      // ==================================================
+  // ==================================================
+  // DISPLAY RISK LEVEL
+  // ==================================================
 
-      const scoreLabel =
-        document.getElementById(
-          "scoreLabel"
-        );
+  function updateRiskLevel(score) {
+    const riskElement = document.getElementById("riskValue");
 
-      if (scoreLabel) {
+    if (!riskElement || score === null || score === undefined || isNaN(Number(score))) {
+      return;
+    }
 
-        if (
-          waterQualityScore >= 80
-        ) {
+    score = Number(score);
 
-          scoreLabel.textContent =
-            "Good";
+    let riskLevel;
 
-          scoreLabel.className =
-            "good";
+    if (score > 70) {
+      riskLevel = "LOW";
+    } else if (score > 50 && score <= 70) {
+      riskLevel = "MEDIUM";
+    } else {
+      riskLevel = "HIGH";
+    }
 
-        } else if (
-          waterQualityScore >= 60
-        ) {
+    riskElement.textContent = riskLevel;
 
-          scoreLabel.textContent =
-            "Moderate";
+    // Update risk-level styling
+    riskElement.classList.remove("low", "medium", "high");
+    riskElement.classList.add(riskLevel.toLowerCase());
+  }
 
-          scoreLabel.className =
-            "warning";
-
-        } else {
-
-          scoreLabel.textContent =
-            "Poor";
-
-          scoreLabel.className =
-            "danger";
-        }
-      }
 
 
       // ==================================================
@@ -1887,89 +1852,37 @@ function updateAlertPage(
   // DEVICE STATUS
   // ======================================================
 
-  function updateDeviceStatus(
-    device,
-    state
-  ) {
+  
+function updateDeviceStatus(device, state) {
+  const text = Number(state) === 1 ? "ON" : "OFF";
 
-    const isOn =
-      Number(state) === 1;
+  if (device === "pump" || device === "Drain Pump") {
+    const status = document.getElementById("pumpStatus");
+    const controlText = document.getElementById("pumpText");
 
-    const text =
-      isOn ? "ON" : "OFF";
-
-
-    // ----------------------------------------------------
-    // PUMP
-    // ----------------------------------------------------
-
-    if (device === "pump") {
-
-      const status =
-        document.getElementById(
-          "pumpStatus"
-        );
-
-      const controlText =
-        document.getElementById(
-          "pumpText"
-        );
-
-
-      if (status) {
-        status.textContent = text;
-      }
-
-      if (controlText) {
-        controlText.textContent = text;
-      }
-    }
-
-
-    // ----------------------------------------------------
-    // LIGHT
-    // ----------------------------------------------------
-
-    if (device === "light") {
-
-      const status =
-        document.getElementById(
-          "lightStatus"
-        );
-
-      const controlText =
-        document.getElementById(
-          "lightText"
-        );
-
-
-      if (status) {
-        status.textContent = text;
-      }
-
-      if (controlText) {
-        controlText.textContent = text;
-      }
-    }
-
-
-    // ----------------------------------------------------
-    // COOLER
-    // ----------------------------------------------------
-
-    if (device === "cooler") {
-
-      const controlText =
-        document.getElementById(
-          "coolerText"
-        );
-
-
-      if (controlText) {
-        controlText.textContent = text;
-      }
-    }
+    if (status) status.textContent = text;
+    if (controlText) controlText.textContent = text;
   }
+
+  if (device === "light" || device === "Refill Pump") {
+    const status = document.getElementById("refillPumpStatus");
+    const controlText = document.getElementById("lightText");
+
+    if (status) status.textContent = text;
+    if (controlText) controlText.textContent = text;
+  }
+
+  if (device === "cooler") {
+  // Update Cooler status on the Dashboard
+  const coolerStatus = document.getElementById("coolerStatus");
+  if (coolerStatus) coolerStatus.textContent = text;
+
+  // Update Cooler status on the Controls page
+  const controlText = document.getElementById("coolerText");
+  if (controlText) controlText.textContent = text;
+}
+}
+
 
 
   // ======================================================
@@ -1994,7 +1907,7 @@ function updateAlertPage(
       const pumpRef =
         ref(
           rtdb,
-          "AquaSmart/ActuatorStatus/Pump"
+          "AquaSmart/ActuatorStatus/Drain Pump"
         );
 
       const command =
@@ -2007,10 +1920,7 @@ function updateAlertPage(
       );
 
 
-      updateDeviceStatus(
-        "pump",
-        command
-      );
+      updateDeviceStatus("Drain Pump", command);
 
 
       console.log(
@@ -2072,7 +1982,7 @@ function updateAlertPage(
       const lightRef =
         ref(
           rtdb,
-          "AquaSmart/ActuatorStatus/Light"
+          "AquaSmart/ActuatorStatus/Refill Pump"
         );
 
       const command =
@@ -2085,10 +1995,7 @@ function updateAlertPage(
       );
 
 
-      updateDeviceStatus(
-        "light",
-        command
-      );
+      updateDeviceStatus("Refill Pump", command);
 
 
       console.log(
@@ -2400,73 +2307,6 @@ function updateAlertPage(
   // Based on REAL-TIME TDS + TURBIDITY
   // ======================================================
 
-  function calculateWaterQualityScore(tds, turbidity) {
-
-    // Convert Firebase values to numbers
-    tds = Number(tds);
-    turbidity = Number(turbidity);
-
-
-    // Check for invalid sensor values
-    if (
-      !Number.isFinite(tds) ||
-      !Number.isFinite(turbidity)
-    ) {
-      return 0;
-    }
-
-
-    // ====================================================
-    // TDS SCORE
-    // Maximum reference value = 500 ppm
-    // ====================================================
-
-    const tdsScore =
-      Math.max(
-        0,
-        Math.min(
-          100,
-          (1 - (tds / 500)) * 100
-        )
-      );
-
-
-    // ====================================================
-    // TURBIDITY SCORE
-    // Maximum reference value = 50 NTU
-    // ====================================================
-
-    const turbidityScore =
-      Math.max(
-        0,
-        Math.min(
-          100,
-          (1 - (turbidity / 50)) * 100
-        )
-      );
-
-
-    // ====================================================
-    // FINAL WATER QUALITY SCORE
-    // TDS = 50%
-    // TURBIDITY = 50%
-    // ====================================================
-
-    const finalScore =
-      (tdsScore * 0.5) +
-      (turbidityScore * 0.5);
-
-
-    return Math.round(
-      Math.max(
-        0,
-        Math.min(
-          100,
-          finalScore
-        )
-      )
-    );
-  }
 
  function getRiskLevel(score) {
   score = Number(score);
@@ -3040,7 +2880,7 @@ const turbidityData = [];
   const pumpStatusRef =
     ref(
       rtdb,
-      "AquaSmart/ActuatorStatus/Pump"
+      "AquaSmart/ActuatorStatus/Drain Pump"
     );
 
 
@@ -3060,10 +2900,7 @@ const turbidityData = [];
       );
 
 
-      updateDeviceStatus(
-        "pump",
-        value
-      );
+      updateDeviceStatus("Drain Pump", value);
 
     },
 
@@ -3086,7 +2923,7 @@ const turbidityData = [];
   const lightStatusRef =
     ref(
       rtdb,
-      "AquaSmart/ActuatorStatus/Light"
+      "AquaSmart/ActuatorStatus/Refill Pump"
     );
 
 
@@ -3106,10 +2943,7 @@ const turbidityData = [];
       );
 
 
-      updateDeviceStatus(
-        "light",
-        value
-      );
+      updateDeviceStatus("Refill Pump", value);
 
     },
 
@@ -4070,94 +3904,31 @@ function generatePrediction() {
   }
 
 
+  
   // ====================================================
-  // RISK CALCULATION
-  // SAME AS DASHBOARD
+  // PREDICTION RISK
+  // Score calculation is handled by the sensor.
+  // Do not calculate the score again in JavaScript.
   // ====================================================
-
-  const predictedScore =
-    calculateWaterQualityScore(
-      predictedTds,
-      predictedTurbidity
-    );
-
-
-  const predictedRisk =
-    getRiskLevel(
-      predictedScore
-    );
-
 
   const predictedRiskElement =
-    document.getElementById(
-      "predictedRisk"
-    );
-
+    document.getElementById("predictedRisk");
 
   if (predictedRiskElement) {
-
-    predictedRiskElement.textContent =
-      predictedRisk;
-
+    predictedRiskElement.textContent = "--";
   }
-
-
-  // ====================================================
-  // COMPARE CURRENT VS PREDICTED RISK
-  // ====================================================
-
-  const currentScore =
-    calculateWaterQualityScore(
-      latest.tds,
-      latest.turbidity
-    );
-
 
   const riskTrendElement =
-    document.getElementById(
-      "predictionRiskTrend"
-    );
-
+    document.getElementById("predictionRiskTrend");
 
   if (riskTrendElement) {
-
-    if (
-      predictedScore >
-      currentScore
-    ) {
-
-      riskTrendElement.textContent =
-        "(Improving)";
-
-    }
-
-    else if (
-      predictedScore <
-      currentScore
-    ) {
-
-      riskTrendElement.textContent =
-        "(Increasing)";
-
-    }
-
-    else {
-
-      riskTrendElement.textContent =
-        "(Stable)";
-
-    }
-
+    riskTrendElement.textContent = "";
   }
-
 
   // ====================================================
   // CREATE PREDICTION GRAPH
   // ====================================================
-
-  createPredictionChart(
-    history
-  );
+  createPredictionChart(history);
 
 }
 
