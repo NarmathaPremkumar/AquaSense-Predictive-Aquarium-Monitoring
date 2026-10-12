@@ -222,33 +222,35 @@ if (
       }
 
 
-      // ======================================================
-// SAVE SENSOR READING TO RTDB HISTORY
-// ======================================================
 
-const historyRef =
-  push(
-    ref(
-      rtdb,
-      "AquaSmart/SensorHistory"
-    )
-  );
+ // ======================================================
+ // SAVE SENSOR READING TO RTDB HISTORY
+ // ======================================================
 
-await set(
-  historyRef,
-  {
-    Temperature: temperature,
-    TDS: tds,
-    Turbidity: turbidity,
+ const historyRef =
+   push(
+     ref(
+       rtdb,
+       "AquaSmart/SensorHistory"
+     )
+   );
 
-    Timestamp:
-      Date.now()
-  }
-);
+ await set(
+   historyRef,
+   {
+     Temperature: temperature,
+     TDS: tds,
+     Turbidity: turbidity,
+     WaterLevel: waterLevel,  // NEW: Save water level
 
-console.log(
-  "📊 Sensor reading saved to history"
-);
+     Timestamp:
+       Date.now()
+   }
+ );
+
+ console.log(
+   "📊 Sensor reading saved to history"
+ );
 
 // ==================================================
 // UPDATE REAL-TIME ALERTS
@@ -907,16 +909,13 @@ let previousAlertLevels = {
 // ======================================================
 
 function getTdsLevel(tds) {
-
-  if (
-    tds <= alertThresholds.maxTds
-  ) {
-
+  if (tds < 200) {
+    return "LOW";
+  } else if (tds <= alertThresholds.maxTds) {
     return "MEDIUM";
-
+  } else {
+    return "HIGH";
   }
-
-  return "HIGH";
 }
 
 
@@ -925,17 +924,13 @@ function getTdsLevel(tds) {
 // ======================================================
 
 function getTurbidityLevel(turbidity) {
-
-  if (
-    turbidity <=
-    alertThresholds.maxTurbidity
-  ) {
-
+  if (turbidity < 10) {
+    return "LOW";
+  } else if (turbidity <= alertThresholds.maxTurbidity) {
     return "MEDIUM";
-
+  } else {
+    return "HIGH";
   }
-
-  return "HIGH";
 }
 
 
@@ -944,17 +939,13 @@ function getTurbidityLevel(turbidity) {
 // ======================================================
 
 function getTemperatureLevel(temperature) {
-
-  if (
-    temperature <=
-    alertThresholds.maxTemperature
-  ) {
-
-    return "NORMAL";
-
+  if (temperature < 24) {
+    return "LOW";
+  } else if (temperature <= alertThresholds.maxTemperature) {
+    return "MEDIUM";
+  } else {
+    return "HIGH";
   }
-
-  return "HIGH";
 }
 
 
@@ -1191,7 +1182,7 @@ if (
 
   showMobileAlertNotification(
     "Turbidity",
-    turbidity + " NTU",
+    turbidity + " % ",
     "Water is highly turbid."
   );
 
@@ -1689,7 +1680,7 @@ function updateAlertPage(
         : turbidityLevel === "MEDIUM"
           ? "Water turbidity is in medium range."
           : "Water turbidity is low.",
-      "NTU"
+      "%"
     )
 
     +
@@ -1867,7 +1858,7 @@ function updateAlertPage(
 function updateDeviceStatus(device, state) {
   const text = Number(state) === 1 ? "ON" : "OFF";
 
-  if (device === "pump" || device === "Drain Pump") {
+  if (device === "pump" || device === "DrainPump") {
     const status = document.getElementById("pumpStatus");
     const controlText = document.getElementById("pumpText");
 
@@ -1875,7 +1866,7 @@ function updateDeviceStatus(device, state) {
     if (controlText) controlText.textContent = text;
   }
 
-  if (device === "light" || device === "Refill Pump") {
+  if (device === "light" || device === "RefillPump") {
     const status = document.getElementById("refillPumpStatus");
     const controlText = document.getElementById("lightText");
 
@@ -1918,7 +1909,7 @@ function updateDeviceStatus(device, state) {
       const pumpRef =
         ref(
           rtdb,
-          "AquaSmart/ActuatorStatus/Drain Pump"
+          "AquaSmart/ActuatorStatus/DrainPump"
         );
 
       const command =
@@ -1931,7 +1922,7 @@ function updateDeviceStatus(device, state) {
       );
 
 
-      updateDeviceStatus("Drain Pump", command);
+      updateDeviceStatus("DrainPump", command);
 
 
       console.log(
@@ -1971,7 +1962,7 @@ function updateDeviceStatus(device, state) {
   }
 
 // ======================================================
-// REFILL PUMP CONTROL
+// REFILLPUMP CONTROL
 // ======================================================
 
 const lightOnButton =
@@ -1981,7 +1972,7 @@ const lightOffButton =
   document.getElementById("lightOff");
 
 const refillPumpRef =
-  ref(rtdb, "AquaSmart/ActuatorStatus/Refill Pump");
+  ref(rtdb, "AquaSmart/ActuatorStatus/RefillPump");
 
 
 // Send ON/OFF command to Firebase
@@ -1991,11 +1982,11 @@ async function setRefillPumpState(state) {
 
     await set(refillPumpRef, command);
 
-    console.log("Refill Pump command sent:", command);
+    console.log("RefillPump command sent:", command);
 
   } catch (error) {
-    console.error("Refill Pump update error:", error);
-    alert("Unable to update Refill Pump.");
+    console.error("RefillPump update error:", error);
+    alert("Unable to update RefillPump.");
   }
 }
 
@@ -2019,7 +2010,7 @@ if (lightOffButton) {
 
 
 // ======================================================
-// REFILL PUMP STATUS - UPDATE DASHBOARD + CONTROLS
+// REFILLPUMP STATUS - UPDATE DASHBOARD + CONTROLS
 // ======================================================
 
 onValue(refillPumpRef, (snapshot) => {
@@ -2030,7 +2021,7 @@ onValue(refillPumpRef, (snapshot) => {
 
   // Update the Dashboard System Status card
   const dashboardStatus =
-    document.getElementById("refillPumpSystemStatus");
+    document.getElementById("RefillPumpSystemStatus");
 
   if (dashboardStatus) {
     dashboardStatus.textContent = statusText;
@@ -2044,7 +2035,7 @@ onValue(refillPumpRef, (snapshot) => {
     controlStatus.textContent = statusText;
   }
 
-  console.log("Refill Pump status received:", statusText);
+  console.log("RefillPump status received:", statusText);
 });
 
   // ======================================================
@@ -2245,76 +2236,6 @@ onValue(refillPumpRef, (snapshot) => {
 
 
   // ======================================================
-  // STOP FEEDING
-  // ======================================================
-
-  const stopFeedButton =
-    document.getElementById(
-      "stopFeedBtn"
-    );
-
-
-  if (stopFeedButton) {
-
-    stopFeedButton.addEventListener(
-      "click",
-      async () => {
-
-        try {
-
-          const feederRef =
-            ref(
-              rtdb,
-              "AquaSmart/ActuatorStatus/Feeder"
-            );
-
-
-          await set(
-            feederRef,
-            "0"
-          );
-
-
-          console.log(
-            "Feeder command sent: 0"
-          );
-
-
-          const feederStatus =
-            document.getElementById(
-              "feederStatus"
-            );
-
-
-          if (feederStatus) {
-
-            feederStatus.textContent =
-              "Ready";
-          }
-
-
-          alert(
-            "Feeding stopped!"
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Stop feeding error:",
-            error
-          );
-
-          alert(
-            "Unable to stop feeding."
-          );
-        }
-
-      }
-    );
-  }
-
-
-  // ======================================================
   // WATER QUALITY SCORE
   // Based on REAL-TIME TDS + TURBIDITY
   // ======================================================
@@ -2354,6 +2275,7 @@ const analyticsLabels = [];
 const analyticsTemperatureData = [];
 const analyticsTdsData = [];
 const analyticsTurbidityData = [];
+const analyticsWaterLevelData = [];
 
 
 // ------------------------------------------------------
@@ -2363,6 +2285,7 @@ const analyticsTurbidityData = [];
 let analyticsTemperatureChart = null;
 let analyticsTdsChart = null;
 let analyticsTurbidityChart = null;
+let analyticsWaterLevelChart = null;
 
 
 // ======================================================
@@ -2373,7 +2296,8 @@ function renderAnalyticsCharts(
   labels,
   temperatureData,
   tdsData,
-  turbidityData
+  turbidityData,
+  waterLevelData
 ) {
 
   // ----------------------------------------------------
@@ -2437,8 +2361,8 @@ function renderAnalyticsCharts(
             scales: {
 
               y: {
-                beginAtZero:
-                  false
+                beginAtZero: true,
+                max: 40
               }
 
             }
@@ -2512,8 +2436,8 @@ function renderAnalyticsCharts(
             scales: {
 
               y: {
-                beginAtZero:
-                  false
+                beginAtZero: true,
+                max: 1000
               }
 
             }
@@ -2561,7 +2485,7 @@ function renderAnalyticsCharts(
 
               {
                 label:
-                  "Turbidity (NTU)",
+                  "Turbidity (%)",
 
                 data:
                   turbidityData,
@@ -2598,6 +2522,84 @@ function renderAnalyticsCharts(
         }
       );
 
+  }
+
+
+    // ----------------------------------------------------
+  // WATER LEVEL HISTORY CHART
+  // ----------------------------------------------------
+
+  const waterLevelChartElement =
+    document.getElementById("waterLevelChart");
+
+  if (
+    waterLevelChartElement &&
+    typeof Chart !== "undefined"
+  ) {
+
+    if (analyticsWaterLevelChart) {
+      analyticsWaterLevelChart.destroy();
+    }
+
+    analyticsWaterLevelChart = new Chart(
+      waterLevelChartElement,
+      {
+        type: "line",
+
+        data: {
+          labels: labels,
+
+          datasets: [
+            {
+              label: "Water Level (%)",
+              data: waterLevelData,
+
+              borderColor: "#2196F3",
+              backgroundColor: "rgba(33, 150, 243, 0.15)",
+
+              borderWidth: 2,
+              pointRadius: 4,
+              pointBackgroundColor: "#2196F3",
+
+              tension: 0.3,
+              fill: false,
+              spanGaps: false
+            }
+          ]
+        },
+
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Sensor Reading"
+              }
+            },
+
+            y: {
+              min: 0,
+              max: 100,
+
+              title: {
+                display: true,
+                text: "Water Level (%)"
+              },
+
+              ticks: {
+                stepSize: 25,
+                callback: function(value) {
+                  return value + "%";
+                }
+              }
+            }
+          }
+        }
+      }
+    );
   }
 
 }
@@ -2648,6 +2650,7 @@ const tdsData = [];
 
 const turbidityData = [];
 
+const waterLevelData = [];
 
     // --------------------------------------------------
     // CONVERT FIREBASE HISTORY TO ARRAY
@@ -2689,6 +2692,8 @@ const turbidityData = [];
           Number(
             reading.Turbidity
           );
+
+          const waterLevel = Number(reading.WaterLevel);
 
 
         // ----------------------------------------------
@@ -2742,6 +2747,10 @@ const turbidityData = [];
           turbidity
         );
 
+        waterLevelData.push(
+  Number.isFinite(waterLevel) ? waterLevel : null
+);
+
       }
     );
 
@@ -2758,7 +2767,8 @@ const turbidityData = [];
         labels,
         temperatureData,
         tdsData,
-        turbidityData
+        turbidityData,
+        waterLevelData
       );
 
     }
@@ -2838,11 +2848,12 @@ const turbidityData = [];
 
 
           row.innerHTML = `
-            <td>${dateTime}</td>
-            <td>${temperature} °C</td>
-            <td>${tds} ppm</td>
-            <td>${turbidity} NTU</td>
-          `;
+  <td>${dateTime}</td>
+  <td>${temperature} °C</td>
+  <td>${tds} ppm</td>
+  <td>${turbidity} %</td>
+  <td>${Number.isFinite(waterLevel) ? waterLevel + " %" : "--"}</td>
+`;
 
 
           historyTableBody.appendChild(
@@ -2892,7 +2903,7 @@ const turbidityData = [];
   const pumpStatusRef =
     ref(
       rtdb,
-      "AquaSmart/ActuatorStatus/Drain Pump"
+      "AquaSmart/ActuatorStatus/DrainPump"
     );
 
 
@@ -2912,7 +2923,7 @@ const turbidityData = [];
       );
 
 
-      updateDeviceStatus("Drain Pump", value);
+      updateDeviceStatus("DrainPump", value);
 
     },
 
@@ -2935,7 +2946,7 @@ const turbidityData = [];
   const lightStatusRef =
     ref(
       rtdb,
-      "AquaSmart/ActuatorStatus/Refill Pump"
+      "AquaSmart/ActuatorStatus/RefillPump"
     );
 
 
@@ -2955,7 +2966,7 @@ const turbidityData = [];
       );
 
 
-      updateDeviceStatus("Refill Pump", value);
+      updateDeviceStatus("RefillPump", value);
 
     },
 
@@ -3850,7 +3861,7 @@ if (predictedTurbidity !== null) {
     turbidityChangeElement.textContent =
       formatPredictionChange(
         turbidityChange,
-        "NTU"
+        "%"
       );
 
   }
@@ -3960,10 +3971,6 @@ function formatPredictionChange(
 
 }
 
-
-// ======================================================
-// PREDICTION GRAPH
-// ======================================================
 
 // ======================================================
 // PREDICTION GRAPHS
@@ -4107,7 +4114,7 @@ function createPredictionChart(history) {
   turbidityPredictionChart = drawChart(
     "turbidityPredictionChart",
     turbidityPredictionChart,
-    "Predicted Turbidity (NTU)",
+    "Predicted Turbidity (%)",
     turbidityHistory,
     turbidityPrediction
   );

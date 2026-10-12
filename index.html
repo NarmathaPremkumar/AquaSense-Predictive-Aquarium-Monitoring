@@ -201,7 +201,7 @@
 
           <strong id="turbidityValue">31</strong>
 
-          <em>NTU</em>
+          <em>%</em>
 
 
         </div>
@@ -346,12 +346,27 @@
       <div class="card chart-card">
 
         <h3>
-          Turbidity Trend (NTU)
+          Turbidity Trend (%)
         </h3>
 
         <canvas id="turbidityChart"></canvas>
 
       </div>
+
+      <!-- WATER LEVEL-->
+
+      <div class="chart-card card">
+        
+        <h3>Water Level History (%)</h3>
+        
+        <div class="chart-container">
+          
+          <canvas id="waterLevelChart"></canvas>
+        
+        </div>
+      
+      </div>
+      
 
 
       <!-- HISTORY -->
@@ -374,7 +389,9 @@
 
               <th>TDS (ppm)</th>
 
-              <th>Turbidity (NTU)</th>
+              <th>Turbidity (%)</th>
+
+              <th>waterLevel (%)</th>
 
             </tr>
 
@@ -420,10 +437,6 @@
 
         <button class="primary" id="feedBtn">
           FEED NOW
-        </button>
-
-        <button class="red" id="stopFeedBtn">
-          STOP FEEDING
         </button>
 
       </div>
@@ -591,7 +604,7 @@
           --
         </strong>
 
-        <small>NTU</small>
+        <small>%</small>
 
       </div>
 
@@ -886,7 +899,7 @@
 
 
   <label>
-    Max Turbidity (NTU)
+    Max Turbidity (%)
 
     <input
       type="number"
