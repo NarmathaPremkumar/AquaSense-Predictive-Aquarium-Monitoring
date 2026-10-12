@@ -468,12 +468,6 @@ th{
 .green,
 .red,
 .schedules button,
-.profile-card button{
-  border:0;
-  border-radius:6px;
-  padding:10px 15px;
-  cursor:pointer
-}
 
 .primary{
   background:#1da9b7;
