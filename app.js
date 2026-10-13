@@ -2693,7 +2693,7 @@ const waterLevelData = [];
             reading.Turbidity
           );
 
-          const waterLevel = Number(reading.WaterLevel);
+        const waterLevel = Number(reading.WaterLevel);
 
 
         // ----------------------------------------------
@@ -2703,7 +2703,8 @@ const waterLevelData = [];
         if (
           !Number.isFinite(temperature) ||
           !Number.isFinite(tds) ||
-          !Number.isFinite(turbidity)
+          !Number.isFinite(turbidity)||
+          !Number.isFinite(waterLevel)
         ) {
 
           return;
@@ -2817,6 +2818,11 @@ const waterLevelData = [];
               reading.Turbidity
             );
 
+
+         const waterLevel = Number(reading.WaterLevel);
+
+console.log("History record:", reading);
+console.log("WaterLevel value:", reading.WaterLevel);
           const timestamp =
             Number(
               reading.Timestamp || 0
@@ -2848,12 +2854,12 @@ const waterLevelData = [];
 
 
           row.innerHTML = `
-  <td>${dateTime}</td>
-  <td>${temperature} °C</td>
-  <td>${tds} ppm</td>
-  <td>${turbidity} %</td>
-  <td>${Number.isFinite(waterLevel) ? waterLevel + " %" : "--"}</td>
-`;
+            <td>${dateTime}</td>
+            <td>${temperature} °C</td>
+            <td>${tds} ppm</td>
+            <td>${turbidity} %</td>
+            <td>${Number.isFinite(waterLevel) ? waterLevel + " %" : "--"}</td>
+            `;
 
 
           historyTableBody.appendChild(
@@ -4241,37 +4247,36 @@ function setupWaterTankInfo() {
   }
 
 
-  // --------------------------------------------------
-  // EDIT BUTTON
-  // --------------------------------------------------
+// --------------------------------------------------
+// EDIT BUTTON
+// --------------------------------------------------
 
-  editButton.addEventListener(
-    "click",
-    () => {
+if (editButton) {
 
-      systemNameInput.value =
-        systemNameDisplay.textContent;
+  editButton.addEventListener("click", () => {
 
-      waterTypeInput.value =
-        waterTypeDisplay.textContent;
+    systemNameInput.value =
+      systemNameDisplay.textContent;
 
-      monitoringInput.value =
-        monitoringDisplay.textContent;
+    waterTypeInput.value =
+      waterTypeDisplay.textContent;
 
+    monitoringInput.value =
+      monitoringDisplay.textContent;
 
-      viewSection.style.display =
-        "none";
-
-      editSection.style.display =
-        "flex";
-
-      editButton.style.display =
-        "none";
-
+    if (viewSection) {
+      viewSection.style.display = "none";
     }
-  );
 
+    if (editSection) {
+      editSection.style.display = "flex";
+    }
 
+    editButton.style.display = "none";
+
+  });
+
+}
   // --------------------------------------------------
   // SAVE BUTTON
   // --------------------------------------------------
