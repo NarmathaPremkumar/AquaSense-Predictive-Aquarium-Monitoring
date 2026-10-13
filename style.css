@@ -1408,3 +1408,31 @@ footer{
     grid-template-columns: 1fr;
   }
 }
+
+
+.history-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.history-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  .history-table-wrapper table {
+    min-width: 650px;
+  }
+
+  .history-table-wrapper th,
+  .history-table-wrapper td {
+    white-space: nowrap;
+    padding: 10px;
+  }
+
+  .card.history {
+    overflow: hidden;
+  }
+}
