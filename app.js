@@ -61,6 +61,9 @@
   // and Water Quality Score come from RTDB.
   // ======================================================
 
+  let latestSensorData = null;
+  let lastHistorySavedAt = 0;
+  const HISTORY_INTERVAL = 5000;
   const sensorDataRef = ref(
     rtdb,
     "AquaSmart/SensorData"
@@ -101,6 +104,14 @@
 
       const waterLevel =
         Number(data.waterLevel);
+
+
+      latestSensorData = {
+        Temperature: temperature,
+        TDS: tds,
+        Turbidity: turbidity,
+        WaterLevel: waterLevel
+      };
 
 
       console.log(
@@ -235,19 +246,6 @@ if (
      )
    );
 
- await set(
-   historyRef,
-   {
-     Temperature: temperature,
-     TDS: tds,
-     Turbidity: turbidity,
-     WaterLevel: waterLevel,  // NEW: Save water level
-
-     Timestamp:
-       Date.now()
-   }
- );
-
  console.log(
    "📊 Sensor reading saved to history"
  );
@@ -380,6 +378,28 @@ console.log("Risk Level:", riskLevel);
 
     }
   );
+  setInterval(async () => {
+  if (!latestSensorData) return;
+
+  const now = Date.now();
+
+  if (now - lastHistorySavedAt < HISTORY_INTERVAL) return;
+
+  try {
+    const historyRef = push(
+      ref(rtdb, "AquaSmart/SensorHistory")
+    );
+
+    await set(historyRef, {
+      ...latestSensorData,
+      Timestamp: now
+    });
+
+    lastHistorySavedAt = now;
+  } catch (error) {
+    console.error("Error saving sensor history:", error);
+  }
+}, HISTORY_INTERVAL);
   const auth = getAuth(app);
 
   // ======================================================
