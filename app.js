@@ -194,6 +194,56 @@
           Math.round(turbidity);
       }
 
+      // ==================================================
+// UPDATE ANALYTICS CARD TRENDS FROM GRAPH DATA
+// Keep the last detected direction during unchanged readings
+// ==================================================
+
+const lastCardTrends = {};
+
+function updateCardTrend(values, trendElementId) {
+  const trendElement = document.getElementById(trendElementId);
+
+  if (!trendElement || values.length < 2) return;
+
+  const previousValue = Number(values[values.length - 2]);
+  const latestValue = Number(values[values.length - 1]);
+
+  if (
+    !Number.isFinite(previousValue) ||
+    !Number.isFinite(latestValue)
+  ) {
+    return;
+  }
+
+  // Update the stored trend only when the value changes
+  if (latestValue > previousValue) {
+    lastCardTrends[trendElementId] = {
+      text: "↑ Increasing",
+      className: "sensor-trend increasing"
+    };
+  } else if (latestValue < previousValue) {
+    lastCardTrends[trendElementId] = {
+      text: "↓ Decreasing",
+      className: "sensor-trend decreasing"
+    };
+  } else if (!lastCardTrends[trendElementId]) {
+    lastCardTrends[trendElementId] = {
+      text: "→ No change",
+      className: "sensor-trend stable"
+    };
+  }
+
+  // Display the last detected trend
+  const trend = lastCardTrends[trendElementId];
+
+  trendElement.textContent = trend.text;
+  trendElement.className = trend.className;
+}
+
+updateCardTrend(temperatureData, "analyticsTempTrend");
+updateCardTrend(tdsData, "analyticsTdsTrend");
+updateCardTrend(turbidityData, "analyticsTurbidityTrend");
 
 // ==================================================
 // DISPLAY WATER LEVEL
@@ -1924,6 +1974,11 @@ function updateDeviceStatus(device, state) {
 
   async function setPumpState(state) {
 
+    if (document.getElementById("controlModeSwitch")?.checked) {
+  alert("Drain Pump is in Auto Mode. Manual control is disabled.");
+  return;
+}
+
     try {
 
       const pumpRef =
@@ -2775,10 +2830,88 @@ const waterLevelData = [];
       }
     );
 
+    // ==================================================
+// UPDATE ANALYTICS CARD TRENDS FROM GRAPH DATA
+// ==================================================
+
+function updateCardTrend(values, trendElementId) {
+  const trendElement = document.getElementById(trendElementId);
+
+  if (!trendElement) return;
+
+  // Need at least two valid graph readings
+  if (values.length < 2) {
+    trendElement.textContent = "→ Waiting for data";
+    trendElement.className = "sensor-trend stable";
+    return;
+  }
+
+  const previousValue = Number(values[values.length - 2]);
+  const latestValue = Number(values[values.length - 1]);
+
+  if (
+    !Number.isFinite(previousValue) ||
+    !Number.isFinite(latestValue)
+  ) {
+    trendElement.textContent = "→ Waiting for data";
+    trendElement.className = "sensor-trend stable";
+    return;
+  }
+
+  if (latestValue > previousValue) {
+    trendElement.textContent = "↑ Increasing";
+    trendElement.className = "sensor-trend increasing";
+  } else if (latestValue < previousValue) {
+    trendElement.textContent = "↓ Decreasing";
+    trendElement.className = "sensor-trend decreasing";
+  } else {
+    trendElement.textContent = "→ No change";
+    trendElement.className = "sensor-trend stable";
+  }
+}
+
+// Calculate trends from the same data used by the graphs
+updateCardTrend(temperatureData, "analyticsTempTrend");
+updateCardTrend(tdsData, "analyticsTdsTrend");
+updateCardTrend(turbidityData, "analyticsTurbidityTrend");
 
     // --------------------------------------------------
     // UPDATE CHARTS
     // --------------------------------------------------
+    // ==================================================
+// UPDATE ANALYTICS CARD VALUES FROM GRAPH HISTORY
+// ==================================================
+
+function updateAnalyticsValue(elementId, values, decimals = 0) {
+  const element = document.getElementById(elementId);
+
+  if (!element || values.length === 0) return;
+
+  const latestValue = Number(values[values.length - 1]);
+
+  if (!Number.isFinite(latestValue)) return;
+
+  element.textContent =
+    decimals > 0
+      ? latestValue.toFixed(decimals)
+      : Math.round(latestValue);
+}
+
+updateAnalyticsValue(
+  "analyticsTempValue",
+  temperatureData,
+  1
+);
+
+updateAnalyticsValue(
+  "analyticsTdsValue",
+  tdsData
+);
+
+updateAnalyticsValue(
+  "analyticsTurbidityValue",
+  turbidityData
+);
 
     if (
       labels.length > 0
@@ -4548,3 +4681,66 @@ document.addEventListener("DOMContentLoaded", () => {
   if (waterType) waterType.textContent = info.waterType;
   if (monitoring) monitoring.textContent = info.monitoring;
 });
+
+
+
+/* =========================================
+   AQUASENSE CONTROL MODE SWITCH
+========================================= */
+
+
+function initializeControlModeSwitch() {
+  const modeSwitch = document.getElementById("controlModeSwitch");
+  const modeStatus = document.getElementById("controlModeStatus");
+
+  const pumpOn = document.getElementById("pumpOn");
+  const pumpOff = document.getElementById("pumpOff");
+
+  const coolerOn = document.getElementById("coolerOn");
+  const coolerOff = document.getElementById("coolerOff");
+
+  const lightOn = document.getElementById("lightOn");
+  const lightOff = document.getElementById("lightOff"); 
+
+  if (!modeSwitch || !modeStatus) {
+    console.error("Control mode switch elements not found.");
+    return;
+  }
+    
+function updateModeDisplay() {
+  const isAuto = modeSwitch.checked;
+
+  // Update mode label
+  modeStatus.textContent = isAuto ? "Auto Mode" : "Manual Mode";
+  modeStatus.classList.toggle("auto", isAuto);
+  modeStatus.classList.toggle("manual", !isAuto);
+
+  // Disable or enable Drain Pump buttons
+  if (pumpOn) pumpOn.disabled = isAuto;
+  if (pumpOff) pumpOff.disabled = isAuto;
+
+  // Disable or enable Cooler buttons
+  if (coolerOn) coolerOn.disabled = isAuto;
+  if (coolerOff) coolerOff.disabled = isAuto;
+
+  // Disable or enable Refill Pump buttons
+  if (lightOn) lightOn.disabled = isAuto;
+  if (lightOff) lightOff.disabled = isAuto;
+
+  console.log("Mode:", isAuto ? "Auto" : "Manual");
+  console.log("Pump buttons disabled:", isAuto);
+  console.log("Cooler buttons disabled:", isAuto);
+  console.log("Light buttons disabled:", isAuto);
+}
+
+
+  modeSwitch.addEventListener("change", updateModeDisplay);
+
+  updateModeDisplay();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeControlModeSwitch);
+} else {
+  initializeControlModeSwitch();
+}

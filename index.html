@@ -313,6 +313,46 @@
 <!-- ================= ANALYTICS ================= -->
 
 <section id="analytics" class="page">
+  
+  <div class="analytics-metric-grid">
+
+  <div class="metric-card analytics-metric-card">
+    <span>🌡️</span>
+    <small>Temperature</small>
+    <div class="analytics-value">
+      <strong id="analyticsTempValue">--</strong>
+      <em>°C</em>
+    </div>
+    <div id="analyticsTempTrend" class="sensor-trend stable">
+      → Waiting for data
+    </div>
+  </div>
+
+  <div class="metric-card analytics-metric-card">
+    <span>💧</span>
+    <small>TDS</small>
+    <div class="analytics-value">
+      <strong id="analyticsTdsValue">--</strong>
+      <em>ppm</em>
+    </div>
+    <div id="analyticsTdsTrend" class="sensor-trend stable">
+      → Waiting for data
+    </div>
+  </div>
+
+  <div class="metric-card analytics-metric-card">
+    <span>☁️</span>
+    <small>Turbidity</small>
+    <div class="analytics-value">
+      <strong id="analyticsTurbidityValue">--</strong>
+      <em>%</em>
+    </div>
+    <div id="analyticsTurbidityTrend" class="sensor-trend stable">
+      → Waiting for data
+    </div>
+  </div>
+
+</div>
 
 
       <!-- TEMPERATURE CHART -->
@@ -410,6 +450,24 @@
     <!-- ================= CONTROLS ================= -->
 
     <section id="controls" class="page">
+
+
+      
+  <!-- CONTROL MODE SWITCH -->
+  <div class="control-mode-header">
+    <div class="control-mode-info">
+      <span class="control-mode-label">Control Mode</span>
+      <span id="controlModeStatus" class="mode-status manual">
+        Manual Mode
+      </span>
+    </div>
+
+    <label class="mode-switch" for="controlModeSwitch">
+      <input type="checkbox" id="controlModeSwitch">
+      <span class="mode-slider"></span>
+    </label>
+  </div>
+
 
       <!-- FEED -->
 
