@@ -1671,51 +1671,50 @@ function updateAlertPage(
   }
 
 
-  // ----------------------------------------------------
-  // DISPLAY ALL CURRENT LEVELS
-  // ----------------------------------------------------
+ // ----------------------------------------------------
+// DISPLAY ALL CURRENT SENSOR LEVELS
+// ----------------------------------------------------
 
-  activeAlerts.innerHTML =
+activeAlerts.innerHTML =
+  createAlertCard(
+    "TDS",
+    tds,
+    tdsLevel,
+    tdsLevel === "HIGH"
+      ? "TDS level is high."
+      : tdsLevel === "MEDIUM"
+        ? "TDS level is in medium range."
+        : "TDS level is low.",
+    "ppm"
+  )
 
-    createAlertCard(
-      "TDS",
-      tds,
-      tdsLevel,
-      tdsLevel === "HIGH"
-        ? "TDS level is high."
-        : tdsLevel === "MEDIUM"
-          ? "TDS level is in medium range."
-          : "TDS level is low.",
-      "ppm"
-    )
+  +
 
-    +
+  createAlertCard(
+    "Turbidity",
+    turbidity,
+    turbidityLevel,
+    turbidityLevel === "HIGH"
+      ? "Water is highly turbid."
+      : turbidityLevel === "MEDIUM"
+        ? "Water turbidity is in medium range."
+        : "Water turbidity is low.",
+    "%"
+  )
 
-    createAlertCard(
-      "Turbidity",
-      turbidity,
-      turbidityLevel,
-      turbidityLevel === "HIGH"
-        ? "Water is highly turbid."
-        : turbidityLevel === "MEDIUM"
-          ? "Water turbidity is in medium range."
-          : "Water turbidity is low.",
-      "%"
-    )
+  +
 
-    +
-
-    createAlertCard(
-      "Temperature",
-      temperature,
-      temperatureLevel,
-      temperatureLevel === "HIGH"
-        ? "Temperature is high."
-        : "Temperature is normal.",
-      "°C"
-    );
-
-
+  createAlertCard(
+    "Temperature",
+    temperature,
+    temperatureLevel,
+    temperatureLevel === "HIGH"
+      ? "Temperature is high."
+      : temperatureLevel === "MEDIUM"
+        ? "Temperature is in medium range."
+        : "Temperature is low.",
+    "°C"
+  );
   // ====================================================
   // UPDATE ALERT BADGE
   // ====================================================
