@@ -1874,270 +1874,50 @@ activeAlerts.innerHTML =
   // ======================================================
 
   
-function updateDeviceStatus(device, state) {
-  const text = Number(state) === 1 ? "ON" : "OFF";
+
+
+function updateDeviceStatus(device, value) {
+  const isOn = Number(value) === 1;
+  const stateText = isOn ? "ON" : "OFF";
 
   if (device === "pump" || device === "DrainPump") {
-    const status = document.getElementById("pumpStatus");
-    const controlText = document.getElementById("pumpText");
+    const dashboardStatus = document.getElementById("pumpStatus");
+    const cardStatus = document.getElementById("pumpText");
+    const toggle = document.getElementById("pumpToggle");
 
-    if (status) status.textContent = text;
-    if (controlText) controlText.textContent = text;
+    if (dashboardStatus) dashboardStatus.textContent = stateText;
+    if (cardStatus) cardStatus.textContent = stateText;
+    if (toggle) toggle.checked = isOn;
   }
 
-  if (device === "light" || device === "RefillPump") {
-    const status = document.getElementById("refillPumpStatus");
-    const controlText = document.getElementById("lightText");
+  if (device === "cooler" || device === "Cooler") {
+    const dashboardStatus = document.getElementById("coolerStatus");
+    const cardStatus = document.getElementById("coolerText");
+    const toggle = document.getElementById("coolerToggle");
 
-    if (status) status.textContent = text;
-    if (controlText) controlText.textContent = text;
+    if (dashboardStatus) dashboardStatus.textContent = stateText;
+    if (cardStatus) cardStatus.textContent = stateText;
+    if (toggle) toggle.checked = isOn;
   }
 
-  if (device === "cooler") {
-  // Update Cooler status on the Dashboard
-  const coolerStatus = document.getElementById("coolerStatus");
-  if (coolerStatus) coolerStatus.textContent = text;
+  if (
+    device === "light" ||
+    device === "refillPump" ||
+    device === "RefillPump"
+  ) {
+    const dashboardStatus =
+      document.getElementById("refillPumpStatus") ||
+      document.getElementById("RefillPumpSystemStatus");
 
-  // Update Cooler status on the Controls page
-  const controlText = document.getElementById("coolerText");
-  if (controlText) controlText.textContent = text;
-}
-}
+    const cardStatus = document.getElementById("lightText");
+    const toggle = document.getElementById("lightToggle");
 
-
-
-  // ======================================================
-  // PUMP CONTROL
-  // ======================================================
-
-  const pumpOnButton =
-    document.getElementById(
-      "pumpOn"
-    );
-
-  const pumpOffButton =
-    document.getElementById(
-      "pumpOff"
-    );
-
-
-  async function setPumpState(state) {
-
-    if (document.getElementById("controlModeSwitch")?.checked) {
-  alert("Drain Pump is in Auto Mode. Manual control is disabled.");
-  return;
-}
-
-    try {
-
-      const pumpRef =
-        ref(
-          rtdb,
-          "AquaSmart/ActuatorStatus/DrainPump"
-        );
-
-      const command =
-        state ? "1" : "0";
-
-
-      await set(
-        pumpRef,
-        command
-      );
-
-
-      updateDeviceStatus("DrainPump", command);
-
-
-      console.log(
-        "Pump command sent:",
-        command
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Pump update error:",
-        error
-      );
-
-      alert(
-        "Unable to update pump."
-      );
-    }
-  }
-
-
-  if (pumpOnButton) {
-
-    pumpOnButton.addEventListener(
-      "click",
-      () => setPumpState(true)
-    );
-  }
-
-
-  if (pumpOffButton) {
-
-    pumpOffButton.addEventListener(
-      "click",
-      () => setPumpState(false)
-    );
-  }
-
-// ======================================================
-// REFILLPUMP CONTROL
-// ======================================================
-
-const lightOnButton =
-  document.getElementById("lightOn");
-
-const lightOffButton =
-  document.getElementById("lightOff");
-
-const refillPumpRef =
-  ref(rtdb, "AquaSmart/ActuatorStatus/RefillPump");
-
-
-// Send ON/OFF command to Firebase
-async function setRefillPumpState(state) {
-  try {
-    const command = state ? "1" : "0";
-
-    await set(refillPumpRef, command);
-
-    console.log("RefillPump command sent:", command);
-
-  } catch (error) {
-    console.error("RefillPump update error:", error);
-    alert("Unable to update RefillPump.");
+    if (dashboardStatus) dashboardStatus.textContent = stateText;
+    if (cardStatus) cardStatus.textContent = stateText;
+    if (toggle) toggle.checked = isOn;
   }
 }
 
-
-// ON button
-if (lightOnButton) {
-  lightOnButton.addEventListener(
-    "click",
-    () => setRefillPumpState(true)
-  );
-}
-
-
-// OFF button
-if (lightOffButton) {
-  lightOffButton.addEventListener(
-    "click",
-    () => setRefillPumpState(false)
-  );
-}
-
-
-// ======================================================
-// REFILLPUMP STATUS - UPDATE DASHBOARD + CONTROLS
-// ======================================================
-
-onValue(refillPumpRef, (snapshot) => {
-  const value = snapshot.val();
-
-  const statusText =
-    Number(value) === 1 ? "ON" : "OFF";
-
-  // Update the Dashboard System Status card
-  const dashboardStatus =
-    document.getElementById("RefillPumpSystemStatus");
-
-  if (dashboardStatus) {
-    dashboardStatus.textContent = statusText;
-  }
-
-  // Update the Controls page status
-  const controlStatus =
-    document.getElementById("lightText");
-
-  if (controlStatus) {
-    controlStatus.textContent = statusText;
-  }
-
-  console.log("RefillPump status received:", statusText);
-});
-
-  // ======================================================
-  // COOLER CONTROL
-  // ======================================================
-
-  const coolerOnButton =
-    document.getElementById(
-      "coolerOn"
-    );
-
-  const coolerOffButton =
-    document.getElementById(
-      "coolerOff"
-    );
-
-
-  async function setCoolerState(state) {
-
-    try {
-
-      const coolerRef =
-        ref(
-          rtdb,
-          "AquaSmart/ActuatorStatus/Cooler"
-        );
-
-      const command =
-        state ? "1" : "0";
-
-
-      await set(
-        coolerRef,
-        command
-      );
-
-
-      updateDeviceStatus(
-        "cooler",
-        command
-      );
-
-
-      console.log(
-        "Cooler command sent:",
-        command
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Cooler update error:",
-        error
-      );
-
-      alert(
-        "Unable to update cooler."
-      );
-    }
-  }
-
-
-  if (coolerOnButton) {
-
-    coolerOnButton.addEventListener(
-      "click",
-      () => setCoolerState(true)
-    );
-  }
-
-
-  if (coolerOffButton) {
-
-    coolerOffButton.addEventListener(
-      "click",
-      () => setCoolerState(false)
-    );
-  }
 
 
   // ======================================================
@@ -2145,118 +1925,108 @@ onValue(refillPumpRef, (snapshot) => {
   // RTDB COMMAND + FIRESTORE HISTORY
   // ======================================================
 
-  const feedButton =
-    document.getElementById(
-      "feedBtn"
-    );
+  
+const feedButton = document.getElementById("feedBtn");
 
+if (feedButton) {
+  feedButton.addEventListener("click", async () => {
 
-  if (feedButton) {
+    // Block manual feeding in Auto Mode
+    const modeSwitch = document.getElementById("controlModeSwitch");
 
-    feedButton.addEventListener(
-      "click",
-      async () => {
+    if (modeSwitch && modeSwitch.checked) {
+      const systemMessage = document.getElementById("systemMessage");
 
-        try {
-
-          // ------------------------------------------------
-          // SEND FEEDER COMMAND
-          // ------------------------------------------------
-
-          const feederRef =
-            ref(
-              rtdb,
-              "AquaSmart/ActuatorStatus/Feeder"
-            );
-
-
-          await set(
-            feederRef,
-            "1"
-          );
-
-
-          console.log(
-            "Feeder command sent: 1"
-          );
-
-
-          // ------------------------------------------------
-          // SAVE FEEDING HISTORY
-          // ------------------------------------------------
-
-          await addDoc(
-            collection(
-              db,
-              "feedingEvents"
-            ),
-            {
-              fed: "1",
-              timestamp:
-                serverTimestamp()
-            }
-          );
-
-
-          // ------------------------------------------------
-          // UPDATE LAST FED
-          // ------------------------------------------------
-
-          const lastFed =
-            document.getElementById(
-              "lastFed"
-            );
-
-
-          if (lastFed) {
-
-            lastFed.textContent =
-              new Date()
-                .toLocaleString();
-          }
-
-
-          // ------------------------------------------------
-          // UPDATE FEEDER STATUS
-          // ------------------------------------------------
-
-          const feederStatus =
-            document.getElementById(
-              "feederStatus"
-            );
-
-
-          if (feederStatus) {
-
-            feederStatus.textContent =
-              "Feeding";
-          }
-
-
-          alert(
-            "Fish feeding command sent!"
-          );
-
-
-          console.log(
-            "Feeding event recorded"
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Feeding error:",
-            error
-          );
-
-          alert(
-            "Unable to send feeding command."
-          );
-        }
-
+      if (systemMessage) {
+        systemMessage.textContent =
+          "Auto Mode: Manual feeding is disabled";
       }
-    );
+
+      return;
+    }
+
+    try {
+      const feederRef = ref(
+        rtdb,
+        "AquaSmart/ActuatorStatus/Feeder"
+      );
+
+      // Send feeder command
+      await set(feederRef, "1");
+
+      // Update System Status
+      const systemMessage = document.getElementById("systemMessage");
+
+      if (systemMessage) {
+        systemMessage.textContent =
+          "FEED NOW: Command sent successfully";
+      }
+
+      console.log("Feeder command sent: 1");
+
+      // Save feeding history
+      await addDoc(collection(db, "feedingEvents"), {
+        fed: "1",
+        timestamp: serverTimestamp()
+      });
+
+      // Update last-fed time
+      const lastFed = document.getElementById("lastFed");
+
+      if (lastFed) {
+        lastFed.textContent = new Date().toLocaleString();
+      }
+
+      // Update feeder status
+      const feederStatus = document.getElementById("feederStatus");
+
+      if (feederStatus) {
+        feederStatus.textContent = "Feeding";
+      }
+
+      alert("Fish feeding command sent!");
+
+      console.log("Feeding event recorded");
+
+    } catch (error) {
+      console.error("Feeding error:", error);
+      alert("Unable to send feeding command. Check Firebase.");
+    }
+  });
+}
+
+/* LOAD THE LAST-FED DATE AND TIME FROM FIRESTORE */
+
+const feedingHistoryQuery = query(
+  collection(db, "feedingEvents"),
+  orderBy("timestamp", "desc"),
+  limit(1)
+);
+
+onSnapshot(
+  feedingHistoryQuery,
+  (snapshot) => {
+    const lastFed = document.getElementById("lastFed");
+
+    if (!lastFed) return;
+
+    if (!snapshot.empty) {
+      const feedingData = snapshot.docs[0].data();
+      const timestamp = feedingData.timestamp;
+
+      if (timestamp) {
+        lastFed.textContent = timestamp.toDate().toLocaleString();
+      }
+    } else {
+      lastFed.textContent = "No feeding recorded yet";
+    }
+  },
+  (error) => {
+    console.error("Unable to load last-fed time:", error);
   }
+);
+
+
 
 
   // ======================================================
@@ -2600,7 +2370,7 @@ function renderAnalyticsCharts(
             x: {
               title: {
                 display: true,
-                text: "Sensor Reading"
+                text: "Time (Hourly)"
               }
             },
 
@@ -2631,6 +2401,87 @@ function renderAnalyticsCharts(
 /// ======================================================
 // LISTEN TO FIREBASE RTDB SENSOR HISTORY
 // ======================================================
+
+function updateAnalyticsMetricCards(
+  temperatureData,
+  tdsData,
+  turbidityData
+) {
+  function updateCard(valueId, trendId, values) {
+    const valueElement = document.getElementById(valueId);
+    const trendElement = document.getElementById(trendId);
+
+    if (!valueElement || !trendElement) return;
+
+    // Find the latest valid reading
+    let latestIndex = -1;
+
+    for (let i = values.length - 1; i >= 0; i--) {
+      if (Number.isFinite(values[i])) {
+        latestIndex = i;
+        break;
+      }
+    }
+
+    if (latestIndex === -1) {
+      valueElement.textContent = "--";
+      trendElement.textContent = "→ Waiting for data";
+      return;
+    }
+
+    const latestValue = values[latestIndex];
+    valueElement.textContent = latestValue;
+
+    // Find the previous valid reading
+    let previousIndex = -1;
+
+    for (let i = latestIndex - 1; i >= 0; i--) {
+      if (Number.isFinite(values[i])) {
+        previousIndex = i;
+        break;
+      }
+    }
+
+    if (previousIndex === -1) {
+      trendElement.textContent = "→ Waiting for more data";
+      trendElement.className = "sensor-trend stable";
+      return;
+    }
+
+    const previousValue = values[previousIndex];
+
+    if (latestValue > previousValue) {
+      trendElement.textContent = "↑ Increasing";
+      trendElement.className = "sensor-trend increasing";
+    } else if (latestValue < previousValue) {
+      trendElement.textContent = "↓ Decreasing";
+      trendElement.className = "sensor-trend decreasing";
+    } else {
+      trendElement.textContent = "→ No Change";
+      trendElement.className = "sensor-trend stable";
+    }
+  }
+
+  updateCard(
+    "analyticsTempValue",
+    "analyticsTempTrend",
+    temperatureData
+  );
+
+  updateCard(
+    "analyticsTdsValue",
+    "analyticsTdsTrend",
+    tdsData
+  );
+
+  updateCard(
+    "analyticsTurbidityValue",
+    "analyticsTurbidityTrend",
+    turbidityData
+  );
+}
+
+
 
 const analyticsHistoryRef =
   ref(
@@ -2796,6 +2647,12 @@ const waterLevelData = [];
         waterLevelData
       );
 
+      updateAnalyticsMetricCards(
+  temperatureData,
+  tdsData,
+  turbidityData
+);
+
     }
 
 
@@ -2952,8 +2809,18 @@ console.log("WaterLevel value:", reading.WaterLevel);
         value
       );
 
+updateDeviceStatus("DrainPump", value);
 
-      updateDeviceStatus("DrainPump", value);
+const systemMessage = document.getElementById("systemMessage");
+
+if (systemMessage) {
+  systemMessage.textContent =
+    `● Drain Pump Status: ${Number(value) === 1 ? "ON" : "OFF"}`;
+}
+
+
+
+      
 
     },
 
@@ -2996,7 +2863,16 @@ console.log("WaterLevel value:", reading.WaterLevel);
       );
 
 
-      updateDeviceStatus("RefillPump", value);
+      
+updateDeviceStatus("RefillPump", value);
+
+const systemMessage = document.getElementById("systemMessage");
+
+if (systemMessage) {
+  systemMessage.textContent =
+    `● Refill Pump Status: ${Number(value) === 1 ? "ON" : "OFF"}`;
+}
+
 
     },
 
@@ -3037,12 +2913,13 @@ console.log("WaterLevel value:", reading.WaterLevel);
         "RTDB Cooler:",
         value
       );
+      updateDeviceStatus("Cooler", value);
+      const systemMessage = document.getElementById("systemMessage");
+      if (systemMessage) {
+        systemMessage.textContent =
+        `● Cooler Status: ${Number(value) === 1 ? "ON" : "OFF"}`;
+      }
 
-
-      updateDeviceStatus(
-        "cooler",
-        value
-      );
 
     },
 
@@ -4559,58 +4436,128 @@ document.addEventListener("DOMContentLoaded", () => {
    AQUASENSE CONTROL MODE SWITCH
 ========================================= */
 
-
 function initializeControlModeSwitch() {
   const modeSwitch = document.getElementById("controlModeSwitch");
   const modeStatus = document.getElementById("controlModeStatus");
 
-  const pumpOn = document.getElementById("pumpOn");
-  const pumpOff = document.getElementById("pumpOff");
-
-  const coolerOn = document.getElementById("coolerOn");
-  const coolerOff = document.getElementById("coolerOff");
-
-  const lightOn = document.getElementById("lightOn");
-const lightOff = document.getElementById("lightOff"); 
-
   if (!modeSwitch || !modeStatus) {
-    console.error("Control mode switch elements not found.");
+    console.error("Control Mode switch or status not found.");
     return;
   }
-    
-function updateModeDisplay() {
-  const isAuto = modeSwitch.checked;
 
-  // Update mode label
-  modeStatus.textContent = isAuto ? "Auto Mode" : "Manual Mode";
-  modeStatus.classList.toggle("auto", isAuto);
-  modeStatus.classList.toggle("manual", !isAuto);
+  const autoModeRef = ref(rtdb, "AquaSmart/Controls/Auto");
 
-  // Disable or enable Drain Pump buttons
-  if (pumpOn) pumpOn.disabled = isAuto;
-  if (pumpOff) pumpOff.disabled = isAuto;
+  function updateModeDisplay() {
+    const isAuto = modeSwitch.checked;
 
-  // Disable or enable Cooler buttons
-  if (coolerOn) coolerOn.disabled = isAuto;
-  if (coolerOff) coolerOff.disabled = isAuto;
+    modeStatus.textContent = isAuto ? "Auto Mode" : "Manual Mode";
+    modeStatus.classList.toggle("auto", isAuto);
+    modeStatus.classList.toggle("manual", !isAuto);
 
-  if (lightOn) lightOn.disabled = isAuto;
-  if (lightOff) lightOff.disabled = isAuto;
+    const controlIds = [
+      "feedBtn",
+      "pumpToggle",
+      "coolerToggle",
+      "lightToggle"
+    ];
 
-  console.log("Mode:", isAuto ? "Auto" : "Manual");
-  console.log("Pump buttons disabled:", isAuto);
-  console.log("Cooler buttons disabled:", isAuto);
-  console.log("light buttons disabled:", isAuto);
-}
+    controlIds.forEach(id => {
+      const control = document.getElementById(id);
+      const card = control?.closest(".control-card");
 
+      if (card) {
+        card.classList.toggle("auto-disabled", isAuto);
+      }
 
-  modeSwitch.addEventListener("change", updateModeDisplay);
+      if (control) {
+        control.disabled = isAuto;
+      }
+    });
+  }
 
-  updateModeDisplay();
+  // Read Firebase mode and keep the switch synchronized.
+  onValue(autoModeRef, snapshot => {
+    const value = String(snapshot.val());
+
+    if (value !== "0" && value !== "1") {
+      console.warn("Invalid or missing Auto Mode value:", value);
+      return;
+    }
+
+    modeSwitch.checked = value === "1";
+    updateModeDisplay();
+  }, error => {
+    console.error("Unable to read Control Mode from Firebase:", error);
+  });
+
+  // Write the selected mode to Firebase.
+  modeSwitch.addEventListener("change", async () => {
+    const selectedValue = modeSwitch.checked ? "1" : "0";
+
+    updateModeDisplay();
+
+    try {
+      await set(autoModeRef, selectedValue);
+      console.log("Control Mode updated:", selectedValue);
+    } catch (error) {
+      console.error("Unable to update Control Mode:", error);
+    }
+  });
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeControlModeSwitch);
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeControlModeSwitch,
+    { once: true }
+  );
 } else {
   initializeControlModeSwitch();
+}
+function setupActuatorSwitch(switchId, firebasePath) {
+  const toggle = document.getElementById(switchId);
+
+  if (!toggle) {
+    console.error(`Switch not found: ${switchId}`);
+    return;
+  }
+
+  toggle.addEventListener("change", async () => {
+    const value = toggle.checked ? "1" : "0";
+
+    try {
+      await set(ref(rtdb, firebasePath), value);
+      console.log(`${firebasePath} updated to ${value}`);
+    } catch (error) {
+      console.error(`Failed to update ${firebasePath}:`, error);
+      alert("Unable to update Firebase. Check the console and database rules.");
+    }
+  });
+}
+
+function initializeActuatorSwitches() {
+  setupActuatorSwitch(
+    "pumpToggle",
+    "AquaSmart/ActuatorStatus/DrainPump"
+  );
+
+  setupActuatorSwitch(
+    "coolerToggle",
+    "AquaSmart/ActuatorStatus/Cooler"
+  );
+
+  setupActuatorSwitch(
+    "lightToggle",
+    "AquaSmart/ActuatorStatus/RefillPump"
+  );
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeActuatorSwitches,
+    { once: true }
+  );
+} else {
+  initializeActuatorSwitches();
 }

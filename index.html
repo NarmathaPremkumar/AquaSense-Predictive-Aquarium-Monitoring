@@ -127,7 +127,7 @@
     </nav>
 
     <div class="sidebar-bottom">
-      Predictive Water<br>
+      Autonomous Aquarium<br>
       Monitoring & Control
     </div>
 
@@ -285,7 +285,7 @@
           <div class="status-item">
             <span>💧</span>
             <span>Refill Pump</span>
-            <b id="refillPumpSystemStatus">OFF</b>
+            <b id="refillPumpStatus">OFF</b>
           </div>
 
           <div>
@@ -500,81 +500,52 @@
       </div>
 
 
-      <!-- PUMP -->
+      
+<!-- PUMP -->
+<div class="control-card card">
+  <div class="control-icon">🔄</div>
 
-      <div class="control-card card">
+  <div class="control-details">
+    <h3>Drain Pump Control</h3>
+    <p>Status <b class="on" id="pumpText">OFF</b></p>
+  </div>
 
-        <div class="control-icon">
-          🔄
-        </div>
+  <label class="device-toggle" for="pumpToggle">
+    <input type="checkbox" id="pumpToggle">
+    <span class="device-slider"></span>
+  </label>
+</div>
 
-        <div>
-
-          <h3>
-            Drain Pump Control
-          </h3>
-
-          <p>
-            Status
-            <b class="on" id="pumpText">
-              OFF
-            </b>
-          </p>
-
-        </div>
-
-        <button class="green" id="pumpOn">
-          TURN ON
-        </button>
-
-        <button class="red" id="pumpOff">
-          TURN OFF
-        </button>
-
-      </div>
-      <div class="control-card card">
+<!-- COOLER -->
+<div class="control-card card">
   <div class="control-icon">❄️</div>
-  <div>
+
+  <div class="control-details">
     <h3>Cooler Control</h3>
     <p>Status <b class="on" id="coolerText">OFF</b></p>
   </div>
-  <button class="green" id="coolerOn">TURN ON</button>
-  <button class="red" id="coolerOff">TURN OFF</button>
+
+  <label class="device-toggle" for="coolerToggle">
+    <input type="checkbox" id="coolerToggle">
+    <span class="device-slider"></span>
+  </label>
 </div>
 
+<!-- REFILL PUMP -->
+<div class="control-card card">
+  <div class="control-icon">💧</div>
 
-      <!-- LIGHT -->
+  <div class="control-details">
+    <h3>Refill Pump Control</h3>
+    <p>Status <b class="on" id="lightText">OFF</b></p>
+  </div>
 
-      <div class="control-card card">
+  <label class="device-toggle" for="lightToggle">
+    <input type="checkbox" id="lightToggle">
+    <span class="device-slider"></span>
+  </label>
+</div>
 
-        <div class="control-icon">
-          💧
-        </div>
-
-        <div>
-
-          <h3>
-            Refill Pump Control
-          </h3>
-
-          <p>
-            Status
-            <b class="on" id="lightText">
-              OFF
-            </b>
-          </p>
-
-        </div>
-
-        <button class="green" id="lightOn">
-          TURN ON
-        </button>
-
-        <button class="red" id="lightOff">
-          TURN OFF
-        </button>
-
-      </div>
 
 </section>
 

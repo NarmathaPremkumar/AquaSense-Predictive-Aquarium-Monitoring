@@ -1609,3 +1609,77 @@ footer{
     grid-template-columns: 1fr;
   }
 }
+
+/* Device toggle switches */
+.device-toggle {
+  position: relative;
+  display: inline-block;
+  width: 54px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.device-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.device-slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background-color: #9ca3af;
+  border-radius: 30px;
+  transition: background-color 0.25s ease;
+}
+
+.device-slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 4px;
+  top: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.device-toggle input:checked + .device-slider {
+  background-color: #16a34a;
+}
+
+.device-toggle input:checked + .device-slider::before {
+  transform: translateX(24px);
+}
+
+.device-toggle input:focus-visible + .device-slider {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.control-details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Disabled control cards in Auto Mode */
+.control-card.auto-disabled {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+  pointer-events: none;
+  cursor: not-allowed;
+  transition: opacity 0.25s ease;
+}
+
+.control-card.auto-disabled button,
+.control-card.auto-disabled input {
+  cursor: not-allowed;
+}
+
+/* Keep the Control Mode switch usable */
+.control-mode-header {
+  pointer-events: auto;
+}
